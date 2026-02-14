@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import Sidebar from "@/components/Sidebar";
+import Providers from "@/components/Providers";
 
 export default async function AuthenticatedLayout({
   children,
@@ -14,11 +15,13 @@ export default async function AuthenticatedLayout({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-6 lg:p-8">{children}</div>
-      </main>
-    </div>
+    <Providers>
+      <div className="flex h-screen overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-6 lg:p-8">{children}</div>
+        </main>
+      </div>
+    </Providers>
   );
 }
