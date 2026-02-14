@@ -4,6 +4,57 @@ import { prisma } from "@/lib/db";
 import { chatWithTutor } from "@/lib/gemini";
 import { buildStudentProfileForLLM, recordActivity } from "@/lib/progress";
 
+// ── Input safety guard ──────────────────────────────────────────────
+const MAX_MESSAGE_LENGTH = 4000;
+
+// Patterns that signal prompt-injection or jailbreak attempts
+const INJECTION_PATTERNS = [
+  /ignore\s+(all\s+)?(previous|prior|above|earlier)\s+(instructions?|prompts?|rules?)/i,
+  /you\s+are\s+now\s+(a|an|the)\b/i,
+  /pretend\s+(you\s+are|to\s+be|you'?re)/i,
+  /act\s+as\s+(a|an|if)/i,
+  /system\s*prompt/i,
+  /\bDAN\b/,
+  /do\s+anything\s+now/i,
+  /jailbreak/i,
+  /bypass\s+(the\s+)?(filter|safety|rules?|restrictions?)/i,
+  /override\s+(your|the|these)\s+(instructions?|rules?|safety)/i,
+  /reveal\s+(your|the)\s+(instructions?|prompt|system|rules)/i,
+  /from\s+now\s+on\s+(you|ignore|respond)/i,
+  /\[\s*system\s*\]/i,
+  /\{\s*"role"\s*:\s*"system"/i,
+];
+
+function sanitizeMessage(message: string): { safe: boolean; reason?: string } {
+  if (!message || typeof message !== "string") {
+    return { safe: false, reason: "empty" };
+  }
+  if (message.length > MAX_MESSAGE_LENGTH) {
+    return { safe: false, reason: "too_long" };
+  }
+  for (const pattern of INJECTION_PATTERNS) {
+    if (pattern.test(message)) {
+      return { safe: false, reason: "injection" };
+    }
+  }
+  return { safe: true };
+}
+
+const REFUSAL_MESSAGES: Record<string, Record<string, string>> = {
+  empty: {
+    fr: "Veuillez saisir un message.",
+    en: "Please enter a message.",
+  },
+  too_long: {
+    fr: "Votre message est trop long. Veuillez le raccourcir et réessayer.",
+    en: "Your message is too long. Please shorten it and try again.",
+  },
+  injection: {
+    fr: "Je suis votre tuteur académique et je ne peux répondre qu'aux questions liées à votre cours. Comment puis-je vous aider avec la matière ?",
+    en: "I'm your academic tutor and can only answer questions related to your course. How can I help you with the material?",
+  },
+};
+
 async function fetchContextContent(contextType: string, contextId: string): Promise<string> {
   switch (contextType) {
     case "exercise": {
@@ -76,6 +127,22 @@ export async function POST(req: NextRequest) {
   try {
     const { courseId, sessionId, message, contextType, contextId } = await req.json();
 
+    // ── Input safety check ──
+    const userLanguage = (session.user as { language?: string }).language || "fr";
+    const check = sanitizeMessage(message);
+    if (!check.safe) {
+      const refusal = REFUSAL_MESSAGES[check.reason!]?.[userLanguage]
+        ?? REFUSAL_MESSAGES[check.reason!]?.fr
+        ?? "Message invalide.";
+
+      // For injection attempts, still save the exchange so admins can audit
+      if (check.reason === "injection" && (sessionId || courseId)) {
+        console.warn(`[SAFETY] Blocked injection attempt from user ${session.user.id}: ${message.substring(0, 120)}`);
+      }
+
+      return NextResponse.json({ response: refusal, blocked: true });
+    }
+
     let chatSession;
 
     if (sessionId) {
@@ -126,7 +193,6 @@ export async function POST(req: NextRequest) {
 
     const course = chatSession.course;
     const studentProfile = await buildStudentProfileForLLM(session.user.id, course.id);
-    const userLanguage = (session.user as { language?: string }).language || "fr";
 
     // Fetch context content if this chat is about a specific resource
     let contextContent = "";
