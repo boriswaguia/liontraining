@@ -920,19 +920,19 @@ anp
 
 
 Les ligne de la matrices sont les n lignes horizontales :
- a11
+a11
 a12
 . . .
 a1p
 
 ,
- a21
+a21
 a22
 . . .
 a2p
 
 , . . .
- an1
+an1
 an2
 . . .
 anp
@@ -1016,7 +1016,7 @@ an1
 
 
 — Lorsque n = 1 on dit qu’on a une matrice ligne
- a11
+a11
 a12
 . . .
 a1p
@@ -1082,20 +1082,20 @@ ses colonnes sont :
 
 
 ce sont des matrices connes. Ses lignes sont :
- 1
+1
 0
 −5
 
 ,
- 2
+2
 −5
 10
 
 ,
- 1
+1
 0
 0
-  9
+ 9
 −6
 3
 
@@ -1372,7 +1372,7 @@ A.B = (cij)
 alors, on a :
 cij
 =
- ai1
+ai1
 ai2
 . . .
 aip
@@ -1504,7 +1504,7 @@ t  2
 
 
 et
-t  1
+t 1
 −3
 −10
 
@@ -2143,7 +2143,7 @@ dire pourquoi.
 
 
 3.
- −1
+−1
 4
 5
 
@@ -2414,15 +2414,15 @@ Montrons que cette application v´eriﬁe les propri´et´e (i) et (ii).
 f(⃗u + ⃗v)
 =
 f
- (x, y) + (a, b)
+(x, y) + (a, b)
 
 =
 f(x + a, y + b)
 =
- (x + a) −(y + b), (x + a) + 2(y + b), 3(x + a) −(y + b)
+(x + a) −(y + b), (x + a) + 2(y + b), 3(x + a) −(y + b)
 
 =
- (x −y) + (y −b), (x + 2y) + (a + 2b), (3x −y) + (3y −b)
+(x −y) + (y −b), (x + 2y) + (a + 2b), (3x −y) + (3y −b)
 
 =
 (x −y, x + 2y, 3x −y) + (a −b, a + 2b, 3a −b)
@@ -2432,12 +2432,12 @@ f(⃗u) + f(⃗v)
 f(λ⃗u)
 =
 f
- λ(x, y)
+λ(x, y)
 
 =
 f(λx, λy)
 =
- (λx) −(λy), (λx) + 2(λy), 3(λx) −(λy)
+(λx) −(λy), (λx) + 2(λy), 3(λx) −(λy)
 
 =
 λ(x −y, x + 2y, 3x −y)

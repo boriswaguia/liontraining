@@ -26,7 +26,12 @@ services:
     ports:
       - "${APP_PORT:-3000}:3000"
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-lionlearn}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-lionlearn}
+      PGUSER: ${POSTGRES_USER:-lionlearn}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      PGDATABASE: ${POSTGRES_DB:-lionlearn}
+      PGHOST: db
+      PGPORT: "5432"
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-lionlearn}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-lionlearn}"
       AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET in .env}
       AUTH_URL: ${AUTH_URL:-http://localhost:3000}
       GEMINI_API_KEY: ${GEMINI_API_KEY:?Set GEMINI_API_KEY in .env}
