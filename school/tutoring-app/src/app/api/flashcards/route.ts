@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { generateFlashcards } from "@/lib/gemini";
+import { buildStudentProfileForLLM, recordActivity } from "@/lib/progress";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -20,11 +21,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Cours non trouvé" }, { status: 404 });
     }
 
+    const studentProfile = await buildStudentProfileForLLM(session.user.id, courseId);
+
     const cards = await generateFlashcards(
       course.title,
       course.content,
       topic,
-      count
+      count,
+      studentProfile
     );
 
     const deck = await prisma.flashcardDeck.create({
@@ -37,6 +41,9 @@ export async function POST(req: NextRequest) {
         cards: JSON.stringify(cards),
       },
     });
+
+    // Record activity for progress tracking
+    await recordActivity(session.user.id, courseId, "flashcard");
 
     return NextResponse.json({ deck, cards }, { status: 201 });
   } catch (error) {

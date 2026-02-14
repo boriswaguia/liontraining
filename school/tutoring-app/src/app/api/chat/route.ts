@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { chatWithTutor } from "@/lib/gemini";
+import { buildStudentProfileForLLM, recordActivity } from "@/lib/progress";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -59,11 +60,13 @@ export async function POST(req: NextRequest) {
     }));
 
     const course = chatSession.course;
+    const studentProfile = await buildStudentProfileForLLM(session.user.id, course.id);
     const aiResponse = await chatWithTutor(
       course.title,
       course.content,
       messageHistory,
-      message
+      message,
+      studentProfile
     );
 
     // Save AI response
@@ -74,6 +77,9 @@ export async function POST(req: NextRequest) {
         content: aiResponse,
       },
     });
+
+    // Record activity for progress tracking
+    await recordActivity(session.user.id, course.id, "chat");
 
     return NextResponse.json({
       sessionId: chatSession.id,

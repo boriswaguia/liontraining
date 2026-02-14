@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { generateExercises } from "@/lib/gemini";
+import { buildStudentProfileForLLM, getOrCreateProgress } from "@/lib/progress";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -10,7 +11,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { courseId, topic, difficulty = "medium", count = 5 } = await req.json();
+    const { courseId, topic, difficulty: reqDifficulty, count = 5 } = await req.json();
 
     const course = await prisma.course.findUnique({
       where: { id: courseId },
@@ -20,12 +21,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Cours non trouvé" }, { status: 404 });
     }
 
+    // Use adaptive difficulty if not explicitly set
+    let difficulty = reqDifficulty;
+    if (!difficulty) {
+      const progress = await getOrCreateProgress(session.user.id, courseId);
+      difficulty = progress.currentDifficulty;
+    }
+
+    const studentProfile = await buildStudentProfileForLLM(session.user.id, courseId);
+
     const result = await generateExercises(
       course.title,
       course.content,
       topic,
       difficulty,
-      count
+      count,
+      studentProfile
     );
 
     const exercise = await prisma.exercise.create({

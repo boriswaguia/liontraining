@@ -9,6 +9,9 @@ import {
   MessageCircle,
   CalendarDays,
   TrendingUp,
+  Zap,
+  Flame,
+  Target,
 } from "lucide-react";
 import { CATEGORY_ICONS } from "@/lib/courses";
 
@@ -16,7 +19,7 @@ export default async function DashboardPage() {
   const session = await auth();
   const userId = session?.user?.id!;
 
-  const [enrollments, studyGuides, exercises, flashcardDecks, chatSessions, studyPlans] =
+  const [enrollments, studyGuides, exercises, flashcardDecks, chatSessions, studyPlans, userProgress, achievements] =
     await Promise.all([
       prisma.enrollment.findMany({
         where: { userId },
@@ -27,7 +30,29 @@ export default async function DashboardPage() {
       prisma.flashcardDeck.count({ where: { userId } }),
       prisma.chatSession.count({ where: { userId } }),
       prisma.studyPlan.count({ where: { userId } }),
+      prisma.userProgress.findMany({
+        where: { userId },
+        include: { course: true },
+      }),
+      prisma.achievement.count({ where: { userId } }),
     ]);
+
+  // Aggregate progress stats
+  const totalXp = userProgress.reduce((sum: number, p: any) => sum + p.totalXp, 0);
+  const maxStreak = userProgress.length > 0
+    ? Math.max(...userProgress.map((p: any) => p.streak))
+    : 0;
+  const totalExercisesScored = userProgress.reduce(
+    (sum: number, p: any) => sum + p.totalExercises,
+    0
+  );
+  const totalCorrect = userProgress.reduce(
+    (sum: number, p: any) => sum + p.totalCorrect,
+    0
+  );
+  const successRate = totalExercisesScored > 0
+    ? Math.round((totalCorrect / totalExercisesScored) * 100)
+    : 0;
 
   const stats = [
     {
@@ -155,6 +180,72 @@ export default async function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* Progress Overview */}
+      {(totalXp > 0 || totalExercisesScored > 0) && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-green-500" />
+              Mon Progrès
+            </h2>
+            <Link
+              href="/progress"
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Voir détails →
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-blue-50 rounded-lg p-3 text-center">
+              <Zap className="w-5 h-5 text-blue-500 mx-auto mb-1" />
+              <p className="text-xl font-bold text-blue-600">{totalXp}</p>
+              <p className="text-xs text-blue-500">XP Total</p>
+            </div>
+            <div className="bg-orange-50 rounded-lg p-3 text-center">
+              <Flame className="w-5 h-5 text-orange-500 mx-auto mb-1" />
+              <p className="text-xl font-bold text-orange-600">{maxStreak}</p>
+              <p className="text-xs text-orange-500">Meilleure Série</p>
+            </div>
+            <div className="bg-green-50 rounded-lg p-3 text-center">
+              <Target className="w-5 h-5 text-green-500 mx-auto mb-1" />
+              <p className="text-xl font-bold text-green-600">{successRate}%</p>
+              <p className="text-xs text-green-500">Taux de Réussite</p>
+            </div>
+            <div className="bg-yellow-50 rounded-lg p-3 text-center">
+              <GraduationCap className="w-5 h-5 text-yellow-600 mx-auto mb-1" />
+              <p className="text-xl font-bold text-yellow-600">{achievements}</p>
+              <p className="text-xs text-yellow-600">Badges</p>
+            </div>
+          </div>
+          {userProgress.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {userProgress.slice(0, 3).map((p: any) => (
+                <div key={p.id} className="flex items-center gap-3">
+                  <span className="text-xs font-medium text-gray-600 w-20 truncate">
+                    {p.course.code}
+                  </span>
+                  <div className="flex-1 bg-gray-100 rounded-full h-2">
+                    <div
+                      className={`rounded-full h-2 transition-all ${
+                        p.masteryLevel >= 70
+                          ? "bg-green-500"
+                          : p.masteryLevel >= 40
+                            ? "bg-yellow-500"
+                            : "bg-orange-500"
+                      }`}
+                      style={{ width: `${p.masteryLevel}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-bold text-gray-600 w-10 text-right">
+                    {p.masteryLevel}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* My Courses */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { generateStudyPlan } from "@/lib/gemini";
+import { buildStudentProfileForLLM, recordActivity } from "@/lib/progress";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -20,12 +21,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Cours non trouvé" }, { status: 404 });
     }
 
+    const studentProfile = await buildStudentProfileForLLM(session.user.id, courseId);
+
     const result = await generateStudyPlan(
       course.title,
       course.content,
       startDate,
       endDate,
-      hoursPerDay
+      hoursPerDay,
+      studentProfile
     );
 
     const plan = await prisma.studyPlan.create({
@@ -46,6 +50,9 @@ export async function POST(req: NextRequest) {
       },
       include: { tasks: true },
     });
+
+    // Record activity for progress tracking
+    await recordActivity(session.user.id, courseId, "study_plan");
 
     return NextResponse.json({ plan }, { status: 201 });
   } catch (error) {

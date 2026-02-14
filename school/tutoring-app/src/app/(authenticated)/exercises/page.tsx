@@ -52,6 +52,12 @@ export default function ExercisesPage() {
   const [showSolutions, setShowSolutions] = useState<Record<number, boolean>>(
     {}
   );
+  const [scoring, setScoring] = useState(false);
+  const [scoreResult, setScoreResult] = useState<{
+    xpEarned: number;
+    newDifficulty: string;
+    overallMastery: number;
+  } | null>(null);
 
   useEffect(() => {
     fetch("/api/courses")
@@ -99,6 +105,37 @@ export default function ExercisesPage() {
 
   const toggleSolution = (index: number) => {
     setShowSolutions((prev) => ({ ...prev, [index]: !prev[index] }));
+  };
+
+  const submitScore = async (score: number) => {
+    if (!activeExercise || scoring) return;
+    setScoring(true);
+    setScoreResult(null);
+    try {
+      const res = await fetch("/api/exercises/score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          exerciseId: activeExercise.id,
+          score,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setScoreResult(data);
+        // Update the exercise in the list to reflect the score
+        setExercises((prev) =>
+          prev.map((ex) =>
+            ex.id === activeExercise.id ? { ...ex, score } : ex
+          )
+        );
+        setActiveExercise((prev) => (prev ? { ...prev, score } : prev));
+      }
+    } catch (error) {
+      console.error("Score error:", error);
+    } finally {
+      setScoring(false);
+    }
   };
 
   const questions = activeExercise
@@ -320,6 +357,69 @@ export default function ExercisesPage() {
                     </div>
                   ))}
                 </div>
+
+                {/* Self-Scoring Section */}
+                {activeExercise && (
+                  <div className="mt-6 border-t border-gray-100 pt-6">
+                    {activeExercise.score !== null ? (
+                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-blue-800">
+                              Score enregistré
+                            </p>
+                            <p className="text-2xl font-bold text-blue-600">
+                              {activeExercise.score}%
+                            </p>
+                          </div>
+                          {scoreResult && (
+                            <div className="text-right">
+                              <p className="text-sm text-blue-600 font-medium">
+                                +{scoreResult.xpEarned} XP gagné !
+                              </p>
+                              <p className="text-xs text-blue-500">
+                                Maîtrise globale: {scoreResult.overallMastery}%
+                              </p>
+                              <p className="text-xs text-blue-500">
+                                Difficulté adaptée: {scoreResult.newDifficulty}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                          Comment avez-vous réussi ? (Auto-évaluation)
+                        </h3>
+                        <div className="grid grid-cols-5 gap-2">
+                          {[
+                            { score: 0, label: "0%", desc: "Pas compris", color: "bg-red-100 hover:bg-red-200 text-red-700" },
+                            { score: 25, label: "25%", desc: "Difficile", color: "bg-orange-100 hover:bg-orange-200 text-orange-700" },
+                            { score: 50, label: "50%", desc: "Moyen", color: "bg-yellow-100 hover:bg-yellow-200 text-yellow-700" },
+                            { score: 75, label: "75%", desc: "Bien", color: "bg-blue-100 hover:bg-blue-200 text-blue-700" },
+                            { score: 100, label: "100%", desc: "Parfait !", color: "bg-green-100 hover:bg-green-200 text-green-700" },
+                          ].map((opt) => (
+                            <button
+                              key={opt.score}
+                              onClick={() => submitScore(opt.score)}
+                              disabled={scoring}
+                              className={`${opt.color} rounded-lg p-3 text-center transition-colors disabled:opacity-50`}
+                            >
+                              <p className="text-lg font-bold">{opt.label}</p>
+                              <p className="text-xs">{opt.desc}</p>
+                            </button>
+                          ))}
+                        </div>
+                        {scoring && (
+                          <p className="text-xs text-gray-400 mt-2 text-center">
+                            Enregistrement...
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </>
             ) : (
               <div className="flex items-center justify-center h-full text-gray-400">

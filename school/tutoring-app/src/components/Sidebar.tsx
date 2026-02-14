@@ -13,12 +13,14 @@ import {
   LogOut,
   Menu,
   X,
+  TrendingUp,
 } from "lucide-react";
 import { useState } from "react";
 
 const navigation = [
   { name: "Tableau de Bord", href: "/dashboard", icon: LayoutDashboard },
   { name: "Mes Cours", href: "/courses", icon: BookOpen },
+  { name: "Mon Progrès", href: "/progress", icon: TrendingUp },
   { name: "Guides d'Étude", href: "/study-guides", icon: FileText },
   { name: "Exercices", href: "/exercises", icon: Lightbulb },
   { name: "Flashcards", href: "/flashcards", icon: GraduationCap },

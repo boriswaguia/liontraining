@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { generateStudyGuide } from "@/lib/gemini";
+import { buildStudentProfileForLLM, recordActivity } from "@/lib/progress";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -20,10 +21,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Cours non trouvé" }, { status: 404 });
     }
 
+    const studentProfile = await buildStudentProfileForLLM(session.user.id, courseId);
+
     const content = await generateStudyGuide(
       course.title,
       course.content,
-      chapter
+      chapter,
+      studentProfile
     );
 
     const guide = await prisma.studyGuide.create({
@@ -37,6 +41,9 @@ export async function POST(req: NextRequest) {
         chapter,
       },
     });
+
+    // Record activity for progress tracking
+    await recordActivity(session.user.id, courseId, "study_guide");
 
     return NextResponse.json({ guide }, { status: 201 });
   } catch (error) {
