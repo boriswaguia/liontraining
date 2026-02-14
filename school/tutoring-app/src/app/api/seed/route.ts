@@ -81,13 +81,14 @@ export async function POST() {
     // Create demo student
     const hashedPassword = await bcrypt.hash("student123", 10);
     const student = await prisma.user.upsert({
-      where: { email: "etudiant@lionai.com" },
+      where: { email: "etudiant@uit.cm" },
       update: {},
       create: {
         name: "Étudiant Demo",
-        email: "etudiant@lionai.com",
+        email: "etudiant@uit.cm",
         password: hashedPassword,
         role: "student",
+        language: "fr",
       },
     });
 
@@ -101,6 +102,7 @@ export async function POST() {
         email: "admin@lionai.com",
         password: adminPassword,
         role: "admin",
+        language: "fr",
       },
     });
 
@@ -163,7 +165,7 @@ export async function POST() {
       message: "Database seeded successfully!",
       results,
       accounts: {
-        student: "etudiant@lionai.com / student123",
+        student: "etudiant@uit.cm / student123",
         admin: "admin@lionai.com / admin123",
       },
     });

@@ -11,6 +11,7 @@ import {
   User,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface Course {
   id: string;
@@ -31,6 +32,7 @@ interface Message {
 }
 
 export default function ChatPage() {
+  const { language: lang, t } = useLanguage();
   const searchParams = useSearchParams();
   const preselectedCourseId = searchParams.get("courseId");
 
@@ -122,7 +124,7 @@ export default function ChatPage() {
         ...prev,
         {
           role: "assistant",
-          content: "Désolé, une erreur est survenue. Veuillez réessayer.",
+          content: t("chat.errorMessage"),
         },
       ]);
     } finally {
@@ -142,10 +144,10 @@ export default function ChatPage() {
       <div className="mb-4">
         <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
           <MessageCircle className="w-6 h-6 text-blue-500" />
-          Tuteur IA
+          {t("chat.title")}
         </h1>
         <p className="text-gray-500 mt-1">
-          Posez vos questions, le tuteur vous explique avec patience
+          {t("chat.subtitle")}
         </p>
       </div>
 
@@ -162,7 +164,7 @@ export default function ChatPage() {
                 }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
               >
-                <option value="">Choisir un cours...</option>
+                <option value="">{t("chat.selectCourse")}</option>
                 {courses.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.code} - {c.title}
@@ -176,7 +178,7 @@ export default function ChatPage() {
               className="w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center justify-center gap-1 mb-3"
             >
               <Plus className="w-4 h-4" />
-              Nouvelle conversation
+              {t("chat.newConversation")}
             </button>
 
             <div className="flex-1 overflow-y-auto space-y-1">
@@ -195,7 +197,7 @@ export default function ChatPage() {
                   </p>
                   <p className="text-xs text-gray-400 mt-0.5">
                     {s.course?.code} •{" "}
-                    {new Date(s.createdAt).toLocaleDateString("fr-FR")}
+                    {new Date(s.createdAt).toLocaleDateString(lang === "en" ? "en-US" : "fr-FR")}
                   </p>
                 </button>
               ))}
@@ -212,12 +214,10 @@ export default function ChatPage() {
                 <div className="text-center py-16 text-gray-400">
                   <Bot className="w-16 h-16 mx-auto mb-3 opacity-30" />
                   <p className="text-lg font-medium">
-                    Bonjour ! Je suis votre tuteur IA 🎓
+                    {t("chat.welcomeTitle")}
                   </p>
                   <p className="text-sm mt-2 max-w-md mx-auto">
-                    Choisissez un cours et posez-moi vos questions. Je vous
-                    expliquerai les concepts avec patience et des exemples
-                    concrets.
+                    {t("chat.welcomeDesc")}
                   </p>
                 </div>
               )}
@@ -267,7 +267,7 @@ export default function ChatPage() {
                   <div className="bg-gray-100 rounded-2xl px-4 py-3">
                     <div className="flex items-center gap-2 text-gray-500">
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span className="text-sm">Je réfléchis...</span>
+                      <span className="text-sm">{t("chat.thinking")}</span>
                     </div>
                   </div>
                 </div>
@@ -284,8 +284,8 @@ export default function ChatPage() {
                   onKeyDown={handleKeyDown}
                   placeholder={
                     selectedCourse
-                      ? "Posez votre question..."
-                      : "Choisissez d'abord un cours..."
+                      ? t("chat.inputPlaceholder")
+                      : t("chat.inputDisabled")
                   }
                   disabled={!selectedCourse}
                   rows={1}

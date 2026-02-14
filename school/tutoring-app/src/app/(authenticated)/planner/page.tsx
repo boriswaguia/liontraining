@@ -11,6 +11,7 @@ import {
   Clock,
   Trophy,
 } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface Course {
   id: string;
@@ -37,6 +38,7 @@ interface StudyPlanItem {
 }
 
 export default function PlannerPage() {
+  const { language: lang, t } = useLanguage();
   const searchParams = useSearchParams();
   const preselectedCourseId = searchParams.get("courseId");
 
@@ -135,10 +137,10 @@ export default function PlannerPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
           <CalendarDays className="w-6 h-6 text-indigo-500" />
-          Plan d&apos;Étude
+          {t("planner.title")}
         </h1>
         <p className="text-gray-500 mt-1">
-          Programme de révision personnalisé par IA
+          {t("planner.subtitle")}
         </p>
       </div>
 
@@ -146,19 +148,19 @@ export default function PlannerPage() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
           <Plus className="w-5 h-5" />
-          Créer un Plan de Révision
+          {t("planner.newPlan")}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Cours
+              {t("planner.course")}
             </label>
             <select
               value={selectedCourse}
               onChange={(e) => setSelectedCourse(e.target.value)}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
             >
-              <option value="">Choisir...</option>
+              <option value="">{t("planner.selectCourse")}</option>
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.code} - {c.title}
@@ -168,7 +170,7 @@ export default function PlannerPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Date début
+              {t("planner.startDate")}
             </label>
             <input
               type="date"
@@ -179,7 +181,7 @@ export default function PlannerPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Date fin (examen)
+              {t("planner.endDate")}
             </label>
             <input
               type="date"
@@ -190,7 +192,7 @@ export default function PlannerPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Heures/jour
+              {t("planner.hoursPerDay")}
             </label>
             <select
               value={hoursPerDay}
@@ -213,10 +215,10 @@ export default function PlannerPage() {
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Création...
+                  {t("planner.generating")}
                 </>
               ) : (
-                "Créer le Plan"
+                t("planner.generate")
               )}
             </button>
           </div>
@@ -228,7 +230,7 @@ export default function PlannerPage() {
         <div className="lg:col-span-1">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <h3 className="font-semibold text-gray-800 mb-3">
-              Mes Plans ({plans.length})
+              {t("planner.myPlans")} ({plans.length})
             </h3>
             <div className="space-y-2 max-h-[60vh] overflow-y-auto">
               {plans.map((plan) => {
@@ -251,7 +253,7 @@ export default function PlannerPage() {
                       {plan.title}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">
-                      {plan.course?.code} • {pct}% complété
+                      {plan.course?.code} • {pct}% {t("planner.completed")}
                     </p>
                     <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
                       <div
@@ -278,10 +280,10 @@ export default function PlannerPage() {
                   <p className="text-sm text-gray-400 mt-1">
                     {activePlan.course?.code} -{" "}
                     {new Date(activePlan.startDate).toLocaleDateString(
-                      "fr-FR"
+                      lang === "en" ? "en-US" : "fr-FR"
                     )}{" "}
-                    au{" "}
-                    {new Date(activePlan.endDate).toLocaleDateString("fr-FR")}
+                    {t("planner.to")}{" "}
+                    {new Date(activePlan.endDate).toLocaleDateString(lang === "en" ? "en-US" : "fr-FR")}
                   </p>
 
                   {/* Progress */}
@@ -344,7 +346,7 @@ export default function PlannerPage() {
                         </div>
                         <div className="flex items-center gap-1 text-xs text-gray-400 flex-shrink-0">
                           <Clock className="w-3.5 h-3.5" />
-                          {dueDate.toLocaleDateString("fr-FR", {
+                          {dueDate.toLocaleDateString(lang === "en" ? "en-US" : "fr-FR", {
                             day: "numeric",
                             month: "short",
                           })}
@@ -360,9 +362,9 @@ export default function PlannerPage() {
                     <div className="flex items-center gap-3">
                       <Trophy className="w-8 h-8 text-yellow-500" />
                       <div>
-                        <p className="font-bold text-gray-800">Plan terminé !</p>
+                        <p className="font-bold text-gray-800">{t("planner.planComplete")}</p>
                         <p className="text-sm text-gray-600">
-                          Félicitations ! Vous avez complété toutes les tâches de ce plan.
+                          {t("planner.congratulations")}
                         </p>
                       </div>
                     </div>
@@ -373,7 +375,7 @@ export default function PlannerPage() {
               <div className="flex items-center justify-center h-full text-gray-400">
                 <div className="text-center">
                   <CalendarDays className="w-16 h-16 mx-auto mb-3 opacity-30" />
-                  <p>Sélectionnez un plan ou créez-en un nouveau</p>
+                  <p>{t("planner.selectOrCreate")}</p>
                 </div>
               </div>
             )}

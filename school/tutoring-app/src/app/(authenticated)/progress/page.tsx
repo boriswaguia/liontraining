@@ -13,6 +13,7 @@ import {
   Zap,
   Award,
 } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface CourseProgress {
   id: string;
@@ -77,10 +78,10 @@ interface ProgressData {
   stats: Stats;
 }
 
-const DIFFICULTY_LABELS: Record<string, { label: string; color: string }> = {
-  easy: { label: "Facile", color: "text-green-600 bg-green-100" },
-  medium: { label: "Moyen", color: "text-yellow-600 bg-yellow-100" },
-  hard: { label: "Difficile", color: "text-red-600 bg-red-100" },
+const DIFFICULTY_LABELS: Record<string, { labelKey: string; color: string }> = {
+  easy: { labelKey: "exercises.easy", color: "text-green-600 bg-green-100" },
+  medium: { labelKey: "exercises.medium", color: "text-yellow-600 bg-yellow-100" },
+  hard: { labelKey: "exercises.hard", color: "text-red-600 bg-red-100" },
 };
 
 function getMasteryColor(score: number): string {
@@ -91,12 +92,12 @@ function getMasteryColor(score: number): string {
   return "bg-red-500";
 }
 
-function getMasteryLabel(score: number): string {
-  if (score >= 80) return "Excellent";
-  if (score >= 60) return "Bon";
-  if (score >= 40) return "Moyen";
-  if (score >= 20) return "Débutant";
-  return "À découvrir";
+function getMasteryLabel(score: number, lang: string): string {
+  if (score >= 80) return lang === "en" ? "Excellent" : "Excellent";
+  if (score >= 60) return lang === "en" ? "Good" : "Bon";
+  if (score >= 40) return lang === "en" ? "Average" : "Moyen";
+  if (score >= 20) return lang === "en" ? "Beginner" : "Débutant";
+  return lang === "en" ? "To discover" : "À découvrir";
 }
 
 function getXPLevel(xp: number): { level: number; progress: number; next: number } {
@@ -115,6 +116,7 @@ function getXPLevel(xp: number): { level: number; progress: number; next: number
 }
 
 export default function ProgressPage() {
+  const { language: lang, t } = useLanguage();
   const [data, setData] = useState<ProgressData | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
@@ -134,7 +136,7 @@ export default function ProgressPage() {
       <div className="max-w-7xl mx-auto flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500">Chargement de vos progrès...</p>
+          <p className="text-gray-500">{t("progress.loading")}</p>
         </div>
       </div>
     );
@@ -143,7 +145,7 @@ export default function ProgressPage() {
   if (!data) {
     return (
       <div className="max-w-7xl mx-auto">
-        <p className="text-gray-500">Erreur lors du chargement des progrès.</p>
+        <p className="text-gray-500">{t("progress.loadError")}</p>
       </div>
     );
   }
@@ -157,10 +159,10 @@ export default function ProgressPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
           <TrendingUp className="w-6 h-6 text-blue-500" />
-          Mon Progrès
+          {t("progress.title")}
         </h1>
         <p className="text-gray-500 mt-1">
-          Suivez votre progression et vos accomplissements
+          {t("progress.subtitle")}
         </p>
       </div>
 
@@ -170,7 +172,7 @@ export default function ProgressPage() {
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white shadow-lg">
           <div className="flex items-center gap-2 mb-2">
             <Zap className="w-5 h-5" />
-            <span className="text-sm font-medium opacity-90">Niveau {xpInfo.level}</span>
+            <span className="text-sm font-medium opacity-90">{t("progress.level")} {xpInfo.level}</span>
           </div>
           <p className="text-3xl font-bold">{stats.totalXp} XP</p>
           <div className="mt-2">
@@ -183,7 +185,7 @@ export default function ProgressPage() {
               />
             </div>
             <p className="text-xs mt-1 opacity-80">
-              {xpInfo.progress}/{xpInfo.next} XP vers niveau {xpInfo.level + 1}
+              {xpInfo.progress}/{xpInfo.next} XP {lang === "en" ? "toward" : "vers"} {t("progress.level").toLowerCase()} {xpInfo.level + 1}
             </p>
           </div>
         </div>
@@ -192,21 +194,21 @@ export default function ProgressPage() {
         <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-4 text-white shadow-lg">
           <div className="flex items-center gap-2 mb-2">
             <Flame className="w-5 h-5" />
-            <span className="text-sm font-medium opacity-90">Série</span>
+            <span className="text-sm font-medium opacity-90">{t("progress.streak")}</span>
           </div>
           <p className="text-3xl font-bold">{stats.maxStreak}</p>
-          <p className="text-xs opacity-80 mt-1">jours consécutifs</p>
+          <p className="text-xs opacity-80 mt-1">{t("progress.consecutiveDays")}</p>
         </div>
 
         {/* Success Rate */}
         <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 text-white shadow-lg">
           <div className="flex items-center gap-2 mb-2">
             <Target className="w-5 h-5" />
-            <span className="text-sm font-medium opacity-90">Réussite</span>
+            <span className="text-sm font-medium opacity-90">{t("progress.successRate")}</span>
           </div>
           <p className="text-3xl font-bold">{stats.successRate}%</p>
           <p className="text-xs opacity-80 mt-1">
-            {stats.totalCorrect}/{stats.totalExercises} exercices
+            {stats.totalCorrect}/{stats.totalExercises} {t("exercises.countUnit")}
           </p>
         </div>
 
@@ -214,11 +216,11 @@ export default function ProgressPage() {
         <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-4 text-white shadow-lg">
           <div className="flex items-center gap-2 mb-2">
             <Star className="w-5 h-5" />
-            <span className="text-sm font-medium opacity-90">Maîtrisés</span>
+            <span className="text-sm font-medium opacity-90">{t("progress.mastered")}</span>
           </div>
           <p className="text-3xl font-bold">{stats.topicsMastered}</p>
           <p className="text-xs opacity-80 mt-1">
-            sur {stats.totalTopics} sujets étudiés
+            {t("progress.ofTopics")} {stats.totalTopics} {t("progress.topicsStudied")}
           </p>
         </div>
       </div>
@@ -230,15 +232,15 @@ export default function ProgressPage() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-blue-500" />
-              Maîtrise par Cours
+              {t("progress.courseMastery")}
             </h2>
 
             {courseProgress.length === 0 ? (
               <div className="text-center py-8 text-gray-400">
                 <BookOpen className="w-12 h-12 mx-auto mb-2 opacity-30" />
-                <p>Commencez à étudier pour voir vos progrès !</p>
+                <p>{t("progress.noData")}</p>
                 <p className="text-sm mt-1">
-                  Générez des exercices, flashcards ou guides d&apos;étude
+                  {t("progress.noDataSub")}
                 </p>
               </div>
             ) : (
@@ -273,7 +275,7 @@ export default function ProgressPage() {
                             <span
                               className={`text-xs px-2 py-0.5 rounded-full ${DIFFICULTY_LABELS[cp.currentDifficulty]?.color || "bg-gray-100"}`}
                             >
-                              {DIFFICULTY_LABELS[cp.currentDifficulty]?.label || cp.currentDifficulty}
+                              {t(DIFFICULTY_LABELS[cp.currentDifficulty]?.labelKey as any) || cp.currentDifficulty}
                             </span>
                             {isExpanded ? (
                               <ChevronUp className="w-4 h-4 text-gray-400" />
@@ -297,9 +299,9 @@ export default function ProgressPage() {
                         </div>
 
                         <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                          <span>{cp.totalExercises} exercices</span>
-                          <span>{cp.totalFlashcards} flashcards</span>
-                          <span>{cp.totalStudyGuides} guides</span>
+                          <span>{cp.totalExercises} {t("exercises.countUnit")}</span>
+                          <span>{cp.totalFlashcards} {t("flash.cards")}</span>
+                          <span>{cp.totalStudyGuides} {lang === "en" ? "guides" : "guides"}</span>
                           <span>{cp.totalXp} XP</span>
                         </div>
                       </button>
@@ -308,7 +310,7 @@ export default function ProgressPage() {
                       {isExpanded && courseTopics.length > 0 && (
                         <div className="border-t border-gray-100 p-4 bg-gray-50">
                           <h4 className="text-sm font-semibold text-gray-700 mb-3">
-                            Détail par Sujet
+                            {t("progress.topicDetail")}
                           </h4>
                           <div className="space-y-3">
                             {courseTopics.map((tm) => (
@@ -319,7 +321,7 @@ export default function ProgressPage() {
                                   </span>
                                   <div className="flex items-center gap-2">
                                     <span className="text-xs text-gray-500">
-                                      {tm.timesPracticed}x pratiqué
+                                      {tm.timesPracticed}x {t("progress.practiced")}
                                     </span>
                                     <span
                                       className={`text-xs px-1.5 py-0.5 rounded ${getMasteryColor(tm.masteryScore)} text-white`}
@@ -344,7 +346,7 @@ export default function ProgressPage() {
 
                       {isExpanded && courseTopics.length === 0 && (
                         <div className="border-t border-gray-100 p-4 bg-gray-50 text-center text-gray-400 text-sm">
-                          Aucun sujet pratiqué pour ce cours
+                          {t("progress.noTopics")}
                         </div>
                       )}
                     </div>
@@ -370,20 +372,20 @@ export default function ProgressPage() {
                 <div>
                   <h3 className="font-semibold text-gray-800">
                     {stats.successRate >= 80
-                      ? "Excellent travail ! Vous êtes sur la bonne voie !"
+                      ? t("progress.excellent")
                       : stats.successRate >= 60
-                        ? "Bon progrès ! Continuez comme ça !"
+                        ? t("progress.goodProgress")
                         : stats.successRate >= 40
-                          ? "Vous progressez ! Concentrez-vous sur vos points faibles."
-                          : "Chaque effort compte ! N'abandonnez pas."}
+                          ? t("progress.progressing")
+                          : t("progress.keepGoing")}
                   </h3>
                   <p className="text-sm text-gray-600 mt-1">
                     {stats.topicsMastered > 0
-                      ? `Vous avez maîtrisé ${stats.topicsMastered} sujet${stats.topicsMastered > 1 ? "s" : ""}. `
+                      ? `${t("progress.masteredCount")} ${stats.topicsMastered} ${stats.topicsMastered > 1 ? t("progress.topicPlural") : t("progress.topicSingular")}. `
                       : ""}
                     {stats.maxStreak > 0
-                      ? `Votre meilleure série est de ${stats.maxStreak} jour${stats.maxStreak > 1 ? "s" : ""}.`
-                      : "Commencez votre série en étudiant chaque jour !"}
+                      ? `${t("progress.bestStreak")} ${stats.maxStreak} ${stats.maxStreak > 1 ? t("progress.dayPlural") : t("progress.daySingular")}.`
+                      : t("progress.startStreak")}
                   </p>
                 </div>
               </div>
@@ -397,14 +399,14 @@ export default function ProgressPage() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <Trophy className="w-5 h-5 text-yellow-500" />
-              Badges ({achievements.length})
+              {t("progress.badges")} ({achievements.length})
             </h2>
 
             {achievements.length === 0 ? (
               <div className="text-center py-6 text-gray-400">
                 <Award className="w-10 h-10 mx-auto mb-2 opacity-30" />
                 <p className="text-sm">
-                  Pas encore de badges. Continuez à étudier !
+                  {t("progress.noBadges")}
                 </p>
               </div>
             ) : (
@@ -430,16 +432,16 @@ export default function ProgressPage() {
           {/* Available Badges Preview */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-sm font-semibold text-gray-600 mb-3">
-              Badges à Débloquer
+              {t("progress.badgesToUnlock")}
             </h2>
             <div className="space-y-2">
               {[
-                { icon: "🎯", title: "Premier Pas", desc: "Compléter 1 exercice" },
-                { icon: "💪", title: "En Forme", desc: "Compléter 5 exercices" },
-                { icon: "⭐", title: "Score Parfait", desc: "100% à un exercice" },
-                { icon: "📅", title: "Régulier", desc: "3 jours de série" },
-                { icon: "🏆", title: "Déterminé", desc: "7 jours de série" },
-                { icon: "🎓", title: "Expert", desc: "80% de maîtrise" },
+                { icon: "🎯", title: t("badge.firstStep"), desc: t("badge.firstStep.desc") },
+                { icon: "💪", title: t("badge.inShape"), desc: t("badge.inShape.desc") },
+                { icon: "⭐", title: t("badge.perfectScore"), desc: t("badge.perfectScore.desc") },
+                { icon: "📅", title: t("badge.regular"), desc: t("badge.regular.desc") },
+                { icon: "🏆", title: t("badge.determined"), desc: t("badge.determined.desc") },
+                { icon: "🎓", title: t("badge.expert"), desc: t("badge.expert.desc") },
               ]
                 .filter(
                   (b) =>

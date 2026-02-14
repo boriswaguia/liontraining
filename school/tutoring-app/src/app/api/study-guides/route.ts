@@ -23,11 +23,14 @@ export async function POST(req: NextRequest) {
 
     const studentProfile = await buildStudentProfileForLLM(session.user.id, courseId);
 
+    const userLanguage = (session.user as { language?: string }).language || "fr";
+
     const content = await generateStudyGuide(
       course.title,
       course.content,
       chapter,
-      studentProfile
+      studentProfile,
+      userLanguage
     );
 
     const guide = await prisma.studyGuide.create({

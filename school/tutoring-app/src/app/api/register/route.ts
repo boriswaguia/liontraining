@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password, schoolId, departmentId, classId } =
+    const { name, email, password, schoolId, departmentId, classId, language } =
       await req.json();
 
     if (!name || !email || !password) {
@@ -74,6 +74,7 @@ export async function POST(req: NextRequest) {
         email,
         password: hashedPassword,
         role: "student",
+        language: language || "fr",
         schoolId,
         departmentId,
         classId,
@@ -86,13 +87,14 @@ export async function POST(req: NextRequest) {
     });
 
     if (courses.length > 0) {
-      await prisma.enrollment.createMany({
-        data: courses.map((course) => ({
-          userId: user.id,
-          courseId: course.id,
-        })),
-        skipDuplicates: true,
-      });
+      for (const course of courses) {
+        await prisma.enrollment.create({
+          data: {
+            userId: user.id,
+            courseId: course.id,
+          },
+        });
+      }
     }
 
     return NextResponse.json(

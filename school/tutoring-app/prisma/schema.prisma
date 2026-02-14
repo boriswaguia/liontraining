@@ -68,6 +68,7 @@ model User {
   email          String          @unique
   password       String
   role           String          @default("student") // student | admin | school_admin
+  language       String          @default("fr")     // fr | en
   schoolId       String?
   departmentId   String?
   classId        String?

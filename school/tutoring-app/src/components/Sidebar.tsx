@@ -21,24 +21,15 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
+import { Language, t } from "@/lib/i18n";
 
-const navigation = [
-  { name: "Tableau de Bord", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Mes Cours", href: "/courses", icon: BookOpen },
-  { name: "Mon Progrès", href: "/progress", icon: TrendingUp },
-  { name: "Guides d'Étude", href: "/study-guides", icon: FileText },
-  { name: "Exercices", href: "/exercises", icon: Lightbulb },
-  { name: "Flashcards", href: "/flashcards", icon: GraduationCap },
-  { name: "Tuteur IA", href: "/chat", icon: MessageCircle },
-  { name: "Plan d'Étude", href: "/planner", icon: CalendarDays },
-];
+const navIcons = [LayoutDashboard, BookOpen, TrendingUp, FileText, Lightbulb, GraduationCap, MessageCircle, CalendarDays];
+const navHrefs = ["/dashboard", "/courses", "/progress", "/study-guides", "/exercises", "/flashcards", "/chat", "/planner"];
+const navKeys = ["nav.dashboard", "nav.courses", "nav.progress", "nav.studyGuides", "nav.exercises", "nav.flashcards", "nav.chat", "nav.planner"] as const;
 
-const adminNavigation = [
-  { name: "Écoles", href: "/admin/schools", icon: School },
-  { name: "Départements", href: "/admin/departments", icon: Building2 },
-  { name: "Classes", href: "/admin/classes", icon: Users },
-  { name: "Cours", href: "/admin/courses", icon: BookOpen },
-];
+const adminIcons = [School, Building2, Users, BookOpen];
+const adminHrefs = ["/admin/schools", "/admin/departments", "/admin/classes", "/admin/courses"];
+const adminKeys = ["nav.admin.schools", "nav.admin.departments", "nav.admin.classes", "nav.admin.courses"] as const;
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -50,8 +41,9 @@ export default function Sidebar() {
   const deptCode = (userExt?.departmentCode as string) || "";
   const className = (userExt?.className as string) || "";
   const userRole = (userExt?.role as string) || "student";
+  const lang = ((userExt?.language as string) || "fr") as Language;
   const isAdmin = userRole === "admin";
-  const subtitle = [deptCode, className].filter(Boolean).join(" · ") || "Plateforme de tutorat";
+  const subtitle = [deptCode, className].filter(Boolean).join(" · ") || t("nav.subtitle.default", lang);
 
   const handleLogout = async () => {
     const res = await fetch("/api/auth/signout", { method: "POST" });
@@ -75,13 +67,14 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-        {navigation.map((item) => {
-          const isActive =
-            pathname === item.href || pathname.startsWith(item.href + "/");
+        {navKeys.map((key, i) => {
+          const href = navHrefs[i];
+          const Icon = navIcons[i];
+          const isActive = pathname === href || pathname.startsWith(href + "/");
           return (
             <Link
-              key={item.name}
-              href={item.href}
+              key={key}
+              href={href}
               onClick={() => setMobileOpen(false)}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                 isActive
@@ -89,8 +82,8 @@ export default function Sidebar() {
                   : "text-blue-100 hover:bg-blue-700 hover:text-white"
               }`}
             >
-              <item.icon className="w-5 h-5" />
-              {item.name}
+              <Icon className="w-5 h-5" />
+              {t(key, lang)}
             </Link>
           );
         })}
@@ -100,16 +93,17 @@ export default function Sidebar() {
             <div className="flex items-center gap-2 px-4 pt-4 pb-1">
               <Settings className="w-4 h-4 text-blue-300" />
               <span className="text-xs font-semibold text-blue-300 uppercase tracking-wider">
-                Administration
+                {t("nav.admin", lang)}
               </span>
             </div>
-            {adminNavigation.map((item) => {
-              const isActive =
-                pathname === item.href || pathname.startsWith(item.href + "/");
+            {adminKeys.map((key, i) => {
+              const href = adminHrefs[i];
+              const Icon = adminIcons[i];
+              const isActive = pathname === href || pathname.startsWith(href + "/");
               return (
                 <Link
-                  key={item.name}
-                  href={item.href}
+                  key={key}
+                  href={href}
                   onClick={() => setMobileOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                     isActive
@@ -117,8 +111,8 @@ export default function Sidebar() {
                       : "text-blue-100 hover:bg-blue-700 hover:text-white"
                   }`}
                 >
-                  <item.icon className="w-5 h-5" />
-                  {item.name}
+                  <Icon className="w-5 h-5" />
+                  {t(key, lang)}
                 </Link>
               );
             })}
@@ -132,7 +126,7 @@ export default function Sidebar() {
           className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-blue-100 hover:bg-blue-700 hover:text-white transition-all w-full"
         >
           <LogOut className="w-5 h-5" />
-          Déconnexion
+          {t("nav.logout", lang)}
         </button>
       </div>
     </>

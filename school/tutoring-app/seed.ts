@@ -176,17 +176,19 @@ async function main() {
   // ============ 4. Create Demo Users ============
   const hashedPassword = await bcrypt.hash("student123", 10);
   const student = await prisma.user.upsert({
-    where: { email: "etudiant@lionai.com" },
+    where: { email: "etudiant@uit.cm" },
     update: {
       schoolId: school.id,
       departmentId: department.id,
       classId: academicClass.id,
+      language: "fr",
     },
     create: {
       name: "Étudiant Demo",
-      email: "etudiant@lionai.com",
+      email: "etudiant@uit.cm",
       password: hashedPassword,
       role: "student",
+      language: "fr",
       schoolId: school.id,
       departmentId: department.id,
       classId: academicClass.id,
@@ -197,17 +199,13 @@ async function main() {
   const adminPassword = await bcrypt.hash("admin123", 10);
   const admin = await prisma.user.upsert({
     where: { email: "admin@lionai.com" },
-    update: {
-      schoolId: school.id,
-      departmentId: department.id,
-    },
+    update: {},
     create: {
       name: "Administrateur",
       email: "admin@lionai.com",
       password: adminPassword,
       role: "admin",
-      schoolId: school.id,
-      departmentId: department.id,
+      language: "fr",
     },
   });
   console.log(`👤 Admin: ${admin.email}`);
@@ -275,7 +273,7 @@ async function main() {
 
   console.log("\n🎉 Database seeded successfully!");
   console.log("\n📋 Demo Accounts:");
-  console.log("   Student: etudiant@lionai.com / student123");
+  console.log("   Student: etudiant@uit.cm / student123");
   console.log("   Admin:   admin@lionai.com / admin123");
   console.log(`\n🏫 Hierarchy: ${school.shortName} → ${department.code} → ${academicClass.name} (${academicClass.academicYear})`);
   console.log(`📚 ${COURSES.length} courses linked to ${academicClass.name}`);

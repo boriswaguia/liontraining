@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { FileText, Loader2, Plus, BookOpen, CheckCircle2, Circle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface Course {
   id: string;
@@ -23,6 +24,7 @@ interface StudyGuide {
 }
 
 export default function StudyGuidesPage() {
+  const { language: lang, t } = useLanguage();
   const searchParams = useSearchParams();
   const preselectedCourseId = searchParams.get("courseId");
 
@@ -95,10 +97,10 @@ export default function StudyGuidesPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
           <FileText className="w-6 h-6 text-green-500" />
-          Guides d&apos;Étude
+          {t("guides.title")}
         </h1>
         <p className="text-gray-500 mt-1">
-          Résumés simplifiés de vos cours, générés par IA
+          {t("guides.subtitle")}
         </p>
       </div>
 
@@ -106,19 +108,19 @@ export default function StudyGuidesPage() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
           <Plus className="w-5 h-5" />
-          Générer un Nouveau Guide
+          {t("guides.newGuide")}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Cours
+              {t("guides.course")}
             </label>
             <select
               value={selectedCourse}
               onChange={(e) => setSelectedCourse(e.target.value)}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             >
-              <option value="">Choisir un cours...</option>
+              <option value="">{t("guides.selectCourse")}</option>
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.code} - {c.title}
@@ -128,13 +130,13 @@ export default function StudyGuidesPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Chapitre (optionnel)
+              {t("guides.chapter")}
             </label>
             <input
               type="text"
               value={chapter}
               onChange={(e) => setChapter(e.target.value)}
-              placeholder="Ex: Nombres complexes"
+              placeholder={t("guides.chapter.placeholder")}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
@@ -147,12 +149,12 @@ export default function StudyGuidesPage() {
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Génération...
+                  {t("guides.generating")}
                 </>
               ) : (
                 <>
                   <FileText className="w-4 h-4" />
-                  Générer
+                  {t("guides.generate")}
                 </>
               )}
             </button>
@@ -165,12 +167,12 @@ export default function StudyGuidesPage() {
         <div className="lg:col-span-1">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <h3 className="font-semibold text-gray-800 mb-3">
-              Mes Guides ({guides.length})
+              {t("guides.myGuides")} ({guides.length})
             </h3>
             {guides.length === 0 ? (
               <div className="text-center py-8 text-gray-400">
                 <BookOpen className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Aucun guide créé</p>
+                <p className="text-sm">{t("guides.noPrevious")}</p>
               </div>
             ) : (
               <div className="space-y-2 max-h-[60vh] overflow-y-auto">
@@ -196,7 +198,7 @@ export default function StudyGuidesPage() {
                         </p>
                         <p className="text-xs text-gray-400 mt-1">
                           {guide.course?.code} •{" "}
-                          {new Date(guide.createdAt).toLocaleDateString("fr-FR")}
+                          {new Date(guide.createdAt).toLocaleDateString(lang === "en" ? "en-US" : "fr-FR")}
                         </p>
                       </div>
                     </div>
@@ -232,7 +234,7 @@ export default function StudyGuidesPage() {
                       className="flex items-center gap-2 px-4 py-2.5 bg-green-50 text-green-700 rounded-lg border border-green-200 hover:bg-green-100 transition-colors"
                     >
                       <CheckCircle2 className="w-5 h-5" />
-                      <span className="font-medium text-sm">Guide lu et compris</span>
+                      <span className="font-medium text-sm">{t("guides.markRead")}</span>
                     </button>
                   ) : (
                     <button
@@ -240,7 +242,7 @@ export default function StudyGuidesPage() {
                       className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 text-gray-600 rounded-lg border border-gray-200 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
                     >
                       <Circle className="w-5 h-5" />
-                      <span className="font-medium text-sm">Marquer comme lu</span>
+                      <span className="font-medium text-sm">{t("guides.markUnread")}</span>
                     </button>
                   )}
                 </div>
@@ -249,7 +251,7 @@ export default function StudyGuidesPage() {
               <div className="flex items-center justify-center h-full text-gray-400">
                 <div className="text-center">
                   <FileText className="w-16 h-16 mx-auto mb-3 opacity-30" />
-                  <p>Sélectionnez un guide ou générez-en un nouveau</p>
+                  <p>{t("guides.selectOrGenerate")}</p>
                 </div>
               </div>
             )}

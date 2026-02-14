@@ -13,7 +13,9 @@ import {
   ChevronRight,
   ChevronLeft,
   Check,
+  Globe,
 } from "lucide-react";
+import { Language, t } from "@/lib/i18n";
 
 interface SchoolItem {
   id: string;
@@ -39,7 +41,8 @@ interface ClassItem {
 }
 
 export default function RegisterPage() {
-  const [step, setStep] = useState(1); // 1: school select, 2: personal info
+  const [step, setStep] = useState(1);
+  const [lang, setLang] = useState<Language>("fr");
 
   // School selection state
   const [schools, setSchools] = useState<SchoolItem[]>([]);
@@ -62,7 +65,6 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // Load schools on mount
   useEffect(() => {
     fetch("/api/schools")
       .then((r) => r.json())
@@ -70,7 +72,6 @@ export default function RegisterPage() {
       .finally(() => setLoadingSchools(false));
   }, []);
 
-  // Load departments when school changes
   useEffect(() => {
     if (!selectedSchool) {
       setDepartments([]);
@@ -87,7 +88,6 @@ export default function RegisterPage() {
       .finally(() => setLoadingDepts(false));
   }, [selectedSchool]);
 
-  // Load classes when department changes
   useEffect(() => {
     if (!selectedDepartment) {
       setClasses([]);
@@ -110,12 +110,12 @@ export default function RegisterPage() {
     setError("");
 
     if (password !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas");
+      setError(t("register.error.passwordMismatch", lang));
       return;
     }
 
     if (password.length < 6) {
-      setError("Le mot de passe doit contenir au moins 6 caractères");
+      setError(t("register.error.passwordShort", lang));
       return;
     }
 
@@ -129,6 +129,7 @@ export default function RegisterPage() {
           name,
           email,
           password,
+          language: lang,
           schoolId: selectedSchool,
           departmentId: selectedDepartment,
           classId: selectedClass,
@@ -138,11 +139,10 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Erreur lors de l'inscription");
+        setError(data.error || t("register.error.generic", lang));
         return;
       }
 
-      // Auto-login after registration
       const { signIn } = await import("next-auth/react");
       await signIn("credentials", {
         email,
@@ -153,7 +153,7 @@ export default function RegisterPage() {
       router.push("/dashboard");
       router.refresh();
     } catch {
-      setError("Une erreur est survenue");
+      setError(t("error.generic", lang));
     } finally {
       setLoading(false);
     }
@@ -166,13 +166,39 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
+        {/* Language toggle - top right */}
+        <div className="flex justify-end mb-4">
+          <div className="flex items-center gap-1 bg-white/15 backdrop-blur-sm rounded-full p-1">
+            <button
+              onClick={() => setLang("fr")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                lang === "fr"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-white/80 hover:text-white"
+              }`}
+            >
+              🇫🇷 FR
+            </button>
+            <button
+              onClick={() => setLang("en")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                lang === "en"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-white/80 hover:text-white"
+              }`}
+            >
+              🇬🇧 EN
+            </button>
+          </div>
+        </div>
+
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg mb-4">
             <GraduationCap className="w-8 h-8 text-blue-600" />
           </div>
-          <h1 className="text-3xl font-bold text-white">LionLearn</h1>
+          <h1 className="text-3xl font-bold text-white">{t("app.name", lang)}</h1>
           <p className="text-blue-200 mt-2">
-            Plateforme de tutorat intelligent
+            {t("app.tagline", lang)}
           </p>
         </div>
 
@@ -186,7 +212,7 @@ export default function RegisterPage() {
             }`}
           >
             {step > 1 ? <Check className="w-4 h-4" /> : <School className="w-4 h-4" />}
-            Mon École
+            {t("register.step1.title", lang)}
           </div>
           <ChevronRight className="w-4 h-4 text-blue-300" />
           <div
@@ -197,7 +223,7 @@ export default function RegisterPage() {
             }`}
           >
             <Users className="w-4 h-4" />
-            Mon Compte
+            {t("register.step2.title", lang)}
           </div>
         </div>
 
@@ -211,10 +237,10 @@ export default function RegisterPage() {
           {step === 1 ? (
             <>
               <h2 className="text-xl font-semibold text-gray-800 mb-1">
-                Trouvez votre école
+                {t("register.findSchool", lang)}
               </h2>
               <p className="text-sm text-gray-500 mb-6">
-                Sélectionnez votre établissement, département et classe
+                {t("register.findSchool.desc", lang)}
               </p>
 
               <div className="space-y-4">
@@ -222,15 +248,15 @@ export default function RegisterPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     <School className="w-4 h-4 inline mr-1" />
-                    École / Université
+                    {t("register.school", lang)}
                   </label>
                   {loadingSchools ? (
                     <div className="w-full px-4 py-3 border border-gray-200 rounded-lg text-gray-400 text-sm">
-                      Chargement des écoles...
+                      {t("register.school.loading", lang)}
                     </div>
                   ) : schools.length === 0 ? (
                     <div className="w-full px-4 py-3 border border-orange-200 bg-orange-50 rounded-lg text-orange-600 text-sm">
-                      Aucune école disponible. Contactez l&apos;administrateur.
+                      {t("register.school.none", lang)}
                     </div>
                   ) : (
                     <select
@@ -238,7 +264,7 @@ export default function RegisterPage() {
                       onChange={(e) => setSelectedSchool(e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
                     >
-                      <option value="">Choisir une école...</option>
+                      <option value="">{t("register.school.placeholder", lang)}</option>
                       {schools.map((s) => (
                         <option key={s.id} value={s.id}>
                           {s.shortName} — {s.city}
@@ -253,15 +279,15 @@ export default function RegisterPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       <Building2 className="w-4 h-4 inline mr-1" />
-                      Département / Filière
+                      {t("register.department", lang)}
                     </label>
                     {loadingDepts ? (
                       <div className="w-full px-4 py-3 border border-gray-200 rounded-lg text-gray-400 text-sm">
-                        Chargement...
+                        {t("loading", lang)}
                       </div>
                     ) : departments.length === 0 ? (
                       <div className="w-full px-4 py-3 border border-gray-200 rounded-lg text-gray-400 text-sm">
-                        Aucun département pour cette école
+                        {t("register.department.none", lang)}
                       </div>
                     ) : (
                       <select
@@ -269,7 +295,7 @@ export default function RegisterPage() {
                         onChange={(e) => setSelectedDepartment(e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
                       >
-                        <option value="">Choisir un département...</option>
+                        <option value="">{t("register.department.placeholder", lang)}</option>
                         {departments.map((d) => (
                           <option key={d.id} value={d.id}>
                             {d.code} — {d.name}
@@ -285,15 +311,15 @@ export default function RegisterPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       <Users className="w-4 h-4 inline mr-1" />
-                      Classe / Niveau
+                      {t("register.class", lang)}
                     </label>
                     {loadingClasses ? (
                       <div className="w-full px-4 py-3 border border-gray-200 rounded-lg text-gray-400 text-sm">
-                        Chargement...
+                        {t("loading", lang)}
                       </div>
                     ) : classes.length === 0 ? (
                       <div className="w-full px-4 py-3 border border-gray-200 rounded-lg text-gray-400 text-sm">
-                        Aucune classe pour ce département
+                        {t("register.class.none", lang)}
                       </div>
                     ) : (
                       <select
@@ -301,7 +327,7 @@ export default function RegisterPage() {
                         onChange={(e) => setSelectedClass(e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
                       >
-                        <option value="">Choisir une classe...</option>
+                        <option value="">{t("register.class.placeholder", lang)}</option>
                         {classes.map((c) => (
                           <option key={c.id} value={c.id}>
                             {c.name} ({c.academicYear})
@@ -316,7 +342,7 @@ export default function RegisterPage() {
                 {canProceedToStep2 && (
                   <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
                     <p className="text-xs text-blue-600 font-medium mb-1">
-                      Votre sélection :
+                      {t("register.selection", lang)}
                     </p>
                     <p className="text-sm text-blue-800">
                       {selectedSchoolObj?.shortName} →{" "}
@@ -334,7 +360,7 @@ export default function RegisterPage() {
                   disabled={!canProceedToStep2}
                   className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  Continuer
+                  {t("register.continue", lang)}
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
@@ -350,7 +376,7 @@ export default function RegisterPage() {
                 </button>
                 <div>
                   <h2 className="text-xl font-semibold text-gray-800">
-                    Créer votre compte
+                    {t("register.createAccount", lang)}
                   </h2>
                   <p className="text-xs text-gray-400">
                     {selectedSchoolObj?.shortName} · {selectedDeptObj?.code} ·{" "}
@@ -362,13 +388,13 @@ export default function RegisterPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Nom complet
+                    {t("register.name", lang)}
                   </label>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Votre nom et prénom"
+                    placeholder={t("register.name.placeholder", lang)}
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
                   />
@@ -376,13 +402,13 @@ export default function RegisterPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Adresse email
+                    {t("register.email", lang)}
                   </label>
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="votre.email@example.com"
+                    placeholder={t("register.email.placeholder", lang)}
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
                   />
@@ -390,14 +416,14 @@ export default function RegisterPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Mot de passe
+                    {t("register.password", lang)}
                   </label>
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Au moins 6 caractères"
+                      placeholder={t("register.password.placeholder", lang)}
                       required
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none pr-12"
                     />
@@ -417,13 +443,13 @@ export default function RegisterPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Confirmer le mot de passe
+                    {t("register.confirmPassword", lang)}
                   </label>
                   <input
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirmez votre mot de passe"
+                    placeholder={t("register.confirmPassword.placeholder", lang)}
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
                   />
@@ -434,7 +460,7 @@ export default function RegisterPage() {
                   disabled={loading}
                   className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? "Inscription en cours..." : "S'inscrire"}
+                  {loading ? t("register.submitting", lang) : t("register.submit", lang)}
                 </button>
               </form>
             </>
@@ -442,12 +468,12 @@ export default function RegisterPage() {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-500">
-              Déjà inscrit ?{" "}
+              {t("register.hasAccount", lang)}{" "}
               <Link
                 href="/login"
                 className="text-blue-600 hover:text-blue-700 font-medium"
               >
-                Se connecter
+                {t("register.login", lang)}
               </Link>
             </p>
           </div>

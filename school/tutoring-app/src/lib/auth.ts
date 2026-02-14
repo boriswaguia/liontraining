@@ -39,6 +39,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           name: user.name,
           email: user.email,
           role: user.role,
+          language: user.language || "fr",
           schoolName: user.school?.shortName || null,
           departmentCode: user.department?.code || null,
           className: user.academicClass?.name || null,
@@ -51,6 +52,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.id = user.id;
         token.role = (user as Record<string, unknown>).role as string;
+        token.language = (user as Record<string, unknown>).language as string;
         token.schoolName = (user as Record<string, unknown>).schoolName as string | null;
         token.departmentCode = (user as Record<string, unknown>).departmentCode as string | null;
         token.className = (user as Record<string, unknown>).className as string | null;
@@ -60,10 +62,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        (session.user as Record<string, unknown>).role = token.role as string;
-        (session.user as Record<string, unknown>).schoolName = token.schoolName;
-        (session.user as Record<string, unknown>).departmentCode = token.departmentCode;
-        (session.user as Record<string, unknown>).className = token.className;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const user = session.user as any;
+        user.role = token.role as string;
+        user.language = token.language;
+        user.schoolName = token.schoolName;
+        user.departmentCode = token.departmentCode;
+        user.className = token.className;
       }
       return session;
     },

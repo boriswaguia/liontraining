@@ -3,10 +3,13 @@ import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { CATEGORY_LABELS, CATEGORY_COLORS, CATEGORY_ICONS } from "@/lib/courses";
 import { Clock, Users } from "lucide-react";
+import { Language, t } from "@/lib/i18n";
 
 export default async function CoursesPage() {
   const session = await auth();
   const userId = session?.user?.id!;
+  const userExt = session?.user as Record<string, unknown> | undefined;
+  const lang = ((userExt?.language as string) || "fr") as Language;
 
   const enrollments = await prisma.enrollment.findMany({
     where: { userId },
@@ -24,7 +27,7 @@ export default async function CoursesPage() {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">Mes Cours</h1>
+        <h1 className="text-2xl font-bold text-gray-800">{t("courses.title", lang)}</h1>
         <p className="text-gray-500 mt-1">
           Niveau 1 - Semestre 1 - Génie Informatique (2025/2026)
         </p>
@@ -68,7 +71,7 @@ export default async function CoursesPage() {
                   </span>
                   <span className="flex items-center gap-1">
                     <Users className="w-3.5 h-3.5" />
-                    Niveau {enrollment.course.level}
+                    {t("progress.level", lang)} {enrollment.course.level}
                   </span>
                 </div>
               </Link>

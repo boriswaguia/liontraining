@@ -11,6 +11,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface Course {
   id: string;
@@ -29,13 +30,14 @@ interface Exercise {
   course: Course;
 }
 
-const DIFFICULTY_LABELS: Record<string, { label: string; color: string }> = {
-  easy: { label: "Facile", color: "bg-green-100 text-green-700" },
-  medium: { label: "Moyen", color: "bg-yellow-100 text-yellow-700" },
-  hard: { label: "Difficile", color: "bg-red-100 text-red-700" },
+const DIFFICULTY_LABELS: Record<string, { labelKey: string; color: string }> = {
+  easy: { labelKey: "exercises.easy", color: "bg-green-100 text-green-700" },
+  medium: { labelKey: "exercises.medium", color: "bg-yellow-100 text-yellow-700" },
+  hard: { labelKey: "exercises.hard", color: "bg-red-100 text-red-700" },
 };
 
 export default function ExercisesPage() {
+  const { language: lang, t } = useLanguage();
   const searchParams = useSearchParams();
   const preselectedCourseId = searchParams.get("courseId");
 
@@ -150,10 +152,10 @@ export default function ExercisesPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
           <Lightbulb className="w-6 h-6 text-yellow-500" />
-          Exercices Pratiques
+          {t("exercises.title")}
         </h1>
         <p className="text-gray-500 mt-1">
-          Exercices avec solutions détaillées, générés par IA
+          {t("exercises.subtitle")}
         </p>
       </div>
 
@@ -161,19 +163,19 @@ export default function ExercisesPage() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
           <Plus className="w-5 h-5" />
-          Générer des Exercices
+          {t("exercises.newExercises")}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Cours
+              {t("exercises.course")}
             </label>
             <select
               value={selectedCourse}
               onChange={(e) => setSelectedCourse(e.target.value)}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
             >
-              <option value="">Choisir...</option>
+              <option value="">{t("exercises.selectCourse")}</option>
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.code} - {c.title}
@@ -183,33 +185,33 @@ export default function ExercisesPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Sujet
+              {t("exercises.topic")}
             </label>
             <input
               type="text"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              placeholder="Ex: Matrices"
+              placeholder={t("exercises.topic.placeholder")}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Difficulté
+              {t("exercises.difficulty")}
             </label>
             <select
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value)}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
             >
-              <option value="easy">Facile</option>
-              <option value="medium">Moyen</option>
-              <option value="hard">Difficile</option>
+              <option value="easy">{t("exercises.easy")}</option>
+              <option value="medium">{t("exercises.medium")}</option>
+              <option value="hard">{t("exercises.hard")}</option>
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nombre
+              {t("exercises.count")}
             </label>
             <select
               value={count}
@@ -218,7 +220,7 @@ export default function ExercisesPage() {
             >
               {[3, 5, 8, 10].map((n) => (
                 <option key={n} value={n}>
-                  {n} exercices
+                  {n} {t("exercises.countUnit")}
                 </option>
               ))}
             </select>
@@ -232,10 +234,10 @@ export default function ExercisesPage() {
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Génération...
+                  {t("exercises.generating")}
                 </>
               ) : (
-                "Générer"
+                t("exercises.generate")
               )}
             </button>
           </div>
@@ -247,7 +249,7 @@ export default function ExercisesPage() {
         <div className="lg:col-span-1">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <h3 className="font-semibold text-gray-800 mb-3">
-              Mes Exercices ({exercises.length})
+              {t("exercises.myExercises")} ({exercises.length})
             </h3>
             <div className="space-y-2 max-h-[60vh] overflow-y-auto">
               {exercises.map((ex) => (
@@ -276,7 +278,7 @@ export default function ExercisesPage() {
                             "bg-gray-100"
                           }`}
                         >
-                          {DIFFICULTY_LABELS[ex.difficulty]?.label || ex.difficulty}
+                          {t(DIFFICULTY_LABELS[ex.difficulty]?.labelKey as any) || ex.difficulty}
                         </span>
                         <span className="text-xs text-gray-400">
                           {ex.course?.code}
@@ -316,7 +318,7 @@ export default function ExercisesPage() {
                         DIFFICULTY_LABELS[activeExercise.difficulty]?.color
                       }`}
                     >
-                      {DIFFICULTY_LABELS[activeExercise.difficulty]?.label}
+                      {t(DIFFICULTY_LABELS[activeExercise.difficulty]?.labelKey as any)}
                     </span>
                   </div>
                   <p className="text-sm text-gray-400">
@@ -347,12 +349,12 @@ export default function ExercisesPage() {
                             {showSolutions[i] ? (
                               <>
                                 <ChevronUp className="w-4 h-4" />
-                                Masquer la solution
+                                {t("exercises.hideSolution")}
                               </>
                             ) : (
                               <>
                                 <ChevronDown className="w-4 h-4" />
-                                Voir la solution
+                                {t("exercises.showSolution")}
                               </>
                             )}
                           </button>
@@ -361,7 +363,7 @@ export default function ExercisesPage() {
                             <div className="mt-3 p-4 bg-green-50 rounded-lg border border-green-200">
                               <div className="flex items-center gap-1 text-green-700 text-sm font-medium mb-2">
                                 <CheckCircle2 className="w-4 h-4" />
-                                Solution
+                                {t("exercises.solution")}
                               </div>
                               <div className="prose prose-sm max-w-none">
                                 <ReactMarkdown>{solutions[i]}</ReactMarkdown>
@@ -382,7 +384,7 @@ export default function ExercisesPage() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm font-medium text-blue-800">
-                              Score enregistré
+                              {t("exercises.scoreRecorded")}
                             </p>
                             <p className="text-2xl font-bold text-blue-600">
                               {activeExercise.score}%
@@ -391,13 +393,13 @@ export default function ExercisesPage() {
                           {scoreResult && (
                             <div className="text-right">
                               <p className="text-sm text-blue-600 font-medium">
-                                +{scoreResult.xpEarned} XP gagné !
+                                +{scoreResult.xpEarned} {t("exercises.xpEarned")}
                               </p>
                               <p className="text-xs text-blue-500">
-                                Maîtrise globale: {scoreResult.overallMastery}%
+                                {t("exercises.overallMastery")} {scoreResult.overallMastery}%
                               </p>
                               <p className="text-xs text-blue-500">
-                                Difficulté adaptée: {scoreResult.newDifficulty}
+                                {t("exercises.adaptedDifficulty")} {scoreResult.newDifficulty}
                               </p>
                             </div>
                           )}
@@ -406,15 +408,15 @@ export default function ExercisesPage() {
                     ) : (
                       <div>
                         <h3 className="text-sm font-semibold text-gray-700 mb-3">
-                          Comment avez-vous réussi ? (Auto-évaluation)
+                          {t("exercises.selfEval")}
                         </h3>
                         <div className="grid grid-cols-5 gap-2">
                           {[
-                            { score: 0, label: "0%", desc: "Pas compris", color: "bg-red-100 hover:bg-red-200 text-red-700" },
-                            { score: 25, label: "25%", desc: "Difficile", color: "bg-orange-100 hover:bg-orange-200 text-orange-700" },
-                            { score: 50, label: "50%", desc: "Moyen", color: "bg-yellow-100 hover:bg-yellow-200 text-yellow-700" },
-                            { score: 75, label: "75%", desc: "Bien", color: "bg-blue-100 hover:bg-blue-200 text-blue-700" },
-                            { score: 100, label: "100%", desc: "Parfait !", color: "bg-green-100 hover:bg-green-200 text-green-700" },
+                            { score: 0, label: "0%", desc: t("exercises.notUnderstood"), color: "bg-red-100 hover:bg-red-200 text-red-700" },
+                            { score: 25, label: "25%", desc: t("exercises.difficult"), color: "bg-orange-100 hover:bg-orange-200 text-orange-700" },
+                            { score: 50, label: "50%", desc: t("exercises.average"), color: "bg-yellow-100 hover:bg-yellow-200 text-yellow-700" },
+                            { score: 75, label: "75%", desc: t("exercises.good"), color: "bg-blue-100 hover:bg-blue-200 text-blue-700" },
+                            { score: 100, label: "100%", desc: t("exercises.perfect"), color: "bg-green-100 hover:bg-green-200 text-green-700" },
                           ].map((opt) => (
                             <button
                               key={opt.score}
@@ -429,7 +431,7 @@ export default function ExercisesPage() {
                         </div>
                         {scoring && (
                           <p className="text-xs text-gray-400 mt-2 text-center">
-                            Enregistrement...
+                            {t("exercises.saving")}
                           </p>
                         )}
                       </div>
@@ -441,7 +443,7 @@ export default function ExercisesPage() {
               <div className="flex items-center justify-center h-full text-gray-400">
                 <div className="text-center">
                   <Lightbulb className="w-16 h-16 mx-auto mb-3 opacity-30" />
-                  <p>Sélectionnez ou générez des exercices</p>
+                  <p>{t("exercises.selectOrGenerate")}</p>
                 </div>
               </div>
             )}

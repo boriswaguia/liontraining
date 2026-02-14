@@ -30,13 +30,16 @@ export async function POST(req: NextRequest) {
 
     const studentProfile = await buildStudentProfileForLLM(session.user.id, courseId);
 
+    const userLanguage = (session.user as { language?: string }).language || "fr";
+
     const result = await generateExercises(
       course.title,
       course.content,
       topic,
       difficulty,
       count,
-      studentProfile
+      studentProfile,
+      userLanguage
     );
 
     const exercise = await prisma.exercise.create({

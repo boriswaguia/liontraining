@@ -61,12 +61,15 @@ export async function POST(req: NextRequest) {
 
     const course = chatSession.course;
     const studentProfile = await buildStudentProfileForLLM(session.user.id, course.id);
+    const userLanguage = (session.user as { language?: string }).language || "fr";
+
     const aiResponse = await chatWithTutor(
       course.title,
       course.content,
       messageHistory,
       message,
-      studentProfile
+      studentProfile,
+      userLanguage
     );
 
     // Save AI response

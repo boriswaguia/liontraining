@@ -23,12 +23,15 @@ export async function POST(req: NextRequest) {
 
     const studentProfile = await buildStudentProfileForLLM(session.user.id, courseId);
 
+    const userLanguage = (session.user as { language?: string }).language || "fr";
+
     const cards = await generateFlashcards(
       course.title,
       course.content,
       topic,
       count,
-      studentProfile
+      studentProfile,
+      userLanguage
     );
 
     const deck = await prisma.flashcardDeck.create({

@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   Star,
 } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface Course {
   id: string;
@@ -35,6 +36,7 @@ interface Card {
 }
 
 export default function FlashcardsPage() {
+  const { language: lang, t } = useLanguage();
   const searchParams = useSearchParams();
   const preselectedCourseId = searchParams.get("courseId");
 
@@ -151,10 +153,10 @@ export default function FlashcardsPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
           <GraduationCap className="w-6 h-6 text-purple-500" />
-          Flashcards de Révision
+          {t("flash.title")}
         </h1>
         <p className="text-gray-500 mt-1">
-          Cartes de révision pour mémoriser les concepts clés
+          {t("flash.subtitle")}
         </p>
       </div>
 
@@ -162,19 +164,19 @@ export default function FlashcardsPage() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
           <Plus className="w-5 h-5" />
-          Créer un Nouveau Deck
+          {t("flash.newDeck")}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Cours
+              {t("flash.course")}
             </label>
             <select
               value={selectedCourse}
               onChange={(e) => setSelectedCourse(e.target.value)}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             >
-              <option value="">Choisir un cours...</option>
+              <option value="">{t("flash.selectCourse")}</option>
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.code} - {c.title}
@@ -184,13 +186,13 @@ export default function FlashcardsPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Sujet (optionnel)
+              {t("flash.topic")}
             </label>
             <input
               type="text"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              placeholder="Ex: Algèbre de Boole"
+              placeholder={t("flash.topic.placeholder")}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
@@ -203,10 +205,10 @@ export default function FlashcardsPage() {
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Génération...
+                  {t("flash.generating")}
                 </>
               ) : (
-                "Créer les Flashcards"
+                t("flash.generate")
               )}
             </button>
           </div>
@@ -218,7 +220,7 @@ export default function FlashcardsPage() {
         <div className="lg:col-span-1">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <h3 className="font-semibold text-gray-800 mb-3">
-              Mes Decks ({decks.length})
+              {t("flash.myDecks")} ({decks.length})
             </h3>
             <div className="space-y-2 max-h-[60vh] overflow-y-auto">
               {decks.map((deck) => {
@@ -250,7 +252,7 @@ export default function FlashcardsPage() {
                         </p>
                         <div className="flex items-center gap-1 mt-1">
                           <span className="text-xs text-gray-400">
-                            {deck.course?.code} • {deckCards.length} cartes
+                            {deck.course?.code} • {deckCards.length} {t("flash.cards")}
                           </span>
                           {deck.confidence !== null && (
                             <span className="text-xs px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 ml-1">
@@ -278,7 +280,7 @@ export default function FlashcardsPage() {
                       {activeDeck.title}
                     </h2>
                     <p className="text-sm text-gray-400">
-                      Carte {currentCardIndex + 1} sur {cards.length}
+                      {t("flash.cardOf")} {currentCardIndex + 1} {t("flash.of")} {cards.length}
                     </p>
                   </div>
                   <button
@@ -286,7 +288,7 @@ export default function FlashcardsPage() {
                     className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
                   >
                     <RotateCcw className="w-4 h-4" />
-                    Recommencer
+                    {t("flash.restart")}
                   </button>
                 </div>
 
@@ -313,26 +315,26 @@ export default function FlashcardsPage() {
                     <div className="flashcard-front bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-lg">
                       <div className="text-center">
                         <p className="text-xs uppercase tracking-wide opacity-70 mb-3">
-                          Question
+                          {t("flash.question")}
                         </p>
                         <p className="text-lg font-medium">
                           {cards[currentCardIndex]?.front}
                         </p>
                         <p className="text-xs opacity-50 mt-4">
-                          Cliquez pour retourner
+                          {t("flash.clickToFlip")}
                         </p>
                       </div>
                     </div>
                     <div className="flashcard-back bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg">
                       <div className="text-center">
                         <p className="text-xs uppercase tracking-wide opacity-70 mb-3">
-                          Réponse
+                          {t("flash.answer")}
                         </p>
                         <p className="text-lg font-medium">
                           {cards[currentCardIndex]?.back}
                         </p>
                         <p className="text-xs opacity-50 mt-4">
-                          Cliquez pour retourner
+                          {t("flash.clickToFlip")}
                         </p>
                       </div>
                     </div>
@@ -364,18 +366,18 @@ export default function FlashcardsPage() {
                 {showConfidence && !activeDeck.reviewed && (
                   <div className="mt-6 pt-4 border-t border-gray-100">
                     <h3 className="text-sm font-semibold text-gray-700 mb-1 text-center">
-                      Deck terminé ! Comment vous sentez-vous ?
+                      {t("flash.deckComplete")}
                     </h3>
                     <p className="text-xs text-gray-400 mb-4 text-center">
-                      Évaluez votre niveau de confiance sur ce deck
+                      {t("flash.rateConfidence")}
                     </p>
                     <div className="grid grid-cols-5 gap-2 max-w-md mx-auto">
                       {[
-                        { score: 20, label: "20%", desc: "Très flou", color: "bg-red-100 hover:bg-red-200 text-red-700" },
-                        { score: 40, label: "40%", desc: "Difficile", color: "bg-orange-100 hover:bg-orange-200 text-orange-700" },
-                        { score: 60, label: "60%", desc: "Moyen", color: "bg-yellow-100 hover:bg-yellow-200 text-yellow-700" },
-                        { score: 80, label: "80%", desc: "Bien", color: "bg-blue-100 hover:bg-blue-200 text-blue-700" },
-                        { score: 100, label: "100%", desc: "Maîtrisé", color: "bg-green-100 hover:bg-green-200 text-green-700" },
+                        { score: 20, label: "20%", desc: t("flash.veryUnclear"), color: "bg-red-100 hover:bg-red-200 text-red-700" },
+                        { score: 40, label: "40%", desc: t("flash.difficult"), color: "bg-orange-100 hover:bg-orange-200 text-orange-700" },
+                        { score: 60, label: "60%", desc: t("flash.average"), color: "bg-yellow-100 hover:bg-yellow-200 text-yellow-700" },
+                        { score: 80, label: "80%", desc: t("flash.good"), color: "bg-blue-100 hover:bg-blue-200 text-blue-700" },
+                        { score: 100, label: "100%", desc: t("flash.mastered"), color: "bg-green-100 hover:bg-green-200 text-green-700" },
                       ].map((opt) => (
                         <button
                           key={opt.score}
@@ -397,9 +399,9 @@ export default function FlashcardsPage() {
                     <div className="flex items-center justify-center gap-2 bg-green-50 rounded-lg p-3 border border-green-200">
                       <CheckCircle2 className="w-5 h-5 text-green-500" />
                       <span className="text-sm font-medium text-green-700">
-                        Deck révisé
+                        {t("flash.deckReviewed")}
                         {activeDeck.confidence !== null && (
-                          <> — Confiance: {activeDeck.confidence}%</>
+                          <> — {t("flash.confidence")} {activeDeck.confidence}%</>
                         )}
                       </span>
                       <button
@@ -415,7 +417,7 @@ export default function FlashcardsPage() {
                         }}
                         className="ml-2 text-xs text-green-600 hover:text-green-800 underline"
                       >
-                        Réviser à nouveau
+                        {t("flash.reviewAgain")}
                       </button>
                     </div>
                   </div>
@@ -425,7 +427,7 @@ export default function FlashcardsPage() {
               <div className="flex items-center justify-center h-full text-gray-400">
                 <div className="text-center">
                   <GraduationCap className="w-16 h-16 mx-auto mb-3 opacity-30" />
-                  <p>Sélectionnez un deck ou créez-en un nouveau</p>
+                  <p>{t("flash.selectOrCreate")}</p>
                 </div>
               </div>
             )}

@@ -488,16 +488,17 @@ async function checkAndAwardBadges(userId: string, courseId: string) {
   }
 
   if (newBadges.length > 0) {
-    await prisma.achievement.createMany({
-      data: newBadges.map((b) => ({
-        userId,
-        badge: b.badge,
-        title: b.title,
-        description: b.description,
-        icon: b.icon,
-      })),
-      skipDuplicates: true,
-    });
+    for (const b of newBadges) {
+      await prisma.achievement.create({
+        data: {
+          userId,
+          badge: b.badge,
+          title: b.title,
+          description: b.description,
+          icon: b.icon,
+        },
+      });
+    }
   }
 
   return newBadges;
