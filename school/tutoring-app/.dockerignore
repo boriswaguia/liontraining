@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.gitignore
+*.md
+!course-materials/**/*.md
+!README.md
+.env*
+!.env.production.example
+dev.db
+prisma/dev.db
+.DS_Store
+npm-debug.log*
+coverage
+.vscode

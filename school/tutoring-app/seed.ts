@@ -26,7 +26,7 @@ const COURSES: CourseDefinition[] = [
     semester: 1,
     level: 1,
     category: "math",
-    filename: "MTIN 121 Analyse mathématique.md",
+    filename: "MTIN_121_Analyse_mathematique.md",
   },
   {
     code: "MTIN-122",
@@ -37,7 +37,7 @@ const COURSES: CourseDefinition[] = [
     semester: 1,
     level: 1,
     category: "math",
-    filename: "MTIN 122 Algèbre_lineaire.md",
+    filename: "MTIN_122_Algebre_lineaire.md",
   },
   {
     code: "MTIN-131",
@@ -48,7 +48,7 @@ const COURSES: CourseDefinition[] = [
     semester: 1,
     level: 1,
     category: "cs",
-    filename: "MTIN_131 (2).md",
+    filename: "MTIN_131_Informatique.md",
   },
   {
     code: "MTIN-132",
@@ -70,7 +70,7 @@ const COURSES: CourseDefinition[] = [
     semester: 1,
     level: 1,
     category: "electronics",
-    filename: "Cours_Electricité_MTIN_2025_2026.md",
+    filename: "Cours_Electricite_MTIN_2025_2026.md",
   },
   {
     code: "MTIN-142",
@@ -81,8 +81,7 @@ const COURSES: CourseDefinition[] = [
     semester: 1,
     level: 1,
     category: "electronics",
-    filename:
-      "MTIN 142_Circuit logique et éléments d'électronique numerique.md",
+    filename: "MTIN_142_Circuit_logique.md",
   },
   {
     code: "MTI-113-FR",
@@ -93,7 +92,7 @@ const COURSES: CourseDefinition[] = [
     semester: 1,
     level: 1,
     category: "language",
-    filename: "MTI 113 Francais.md",
+    filename: "MTI_113_Francais.md",
   },
   {
     code: "MTIN-113-EOE",
@@ -104,7 +103,7 @@ const COURSES: CourseDefinition[] = [
     semester: 1,
     level: 1,
     category: "business",
-    filename: "MTIN 113 EOE.md",
+    filename: "MTIN_113_EOE.md",
   },
   {
     code: "MTIN-114",
@@ -115,7 +114,7 @@ const COURSES: CourseDefinition[] = [
     semester: 1,
     level: 1,
     category: "law",
-    filename: "MTIN 114 Droit.md",
+    filename: "MTIN_114_Droit.md",
   },
 ];
 
@@ -211,7 +210,10 @@ async function main() {
   console.log(`👤 Admin: ${admin.email}`);
 
   // ============ 5. Seed Courses (linked to class) ============
-  const coursesDir = path.resolve(__dirname, "../uit/gi/2025");
+  // Use COURSES_DIR env var, or fall back to local path
+  const coursesDir = process.env.COURSES_DIR
+    ? path.resolve(process.env.COURSES_DIR)
+    : path.resolve(__dirname, "../uit/gi/2025");
   console.log(`\n📚 Loading courses from: ${coursesDir}\n`);
 
   for (const courseDef of COURSES) {
