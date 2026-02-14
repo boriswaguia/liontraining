@@ -1,0 +1,14 @@
+- Do not generate summary files. If you need to save or dump your knowledge or the history of our exchanges, you can create some markdown files in the docs/ folder. Use only one file for all the topics. Make sure it is always structured.
+<!-- - Whenever you need to rebuild your project knowledge, read the existing codebase instead of asking for a summary. Read all java classes, properties files, test classes, frontend (whalte-ui) and docs/ folder files where some markdown are created. -->
+- Controllers are always in the "/controller/" folder. They should only handle HTTP requests and responses, delegating business logic to services.
+- Services are always in the "/service/" folder. They contain the core business logic of the application.
+- Repositories are always in the "/repository/" folder. They handle data access and persistence.
+- Domain classes (entities) are always in the "/domain/" folder.
+- Configuration classes are always in the "/config/" folder.
+- DTOs are always in the "/dto/" folder.
+- Mappers are always in the "/mapper/" folder.
+- Exception classes are always in the "/exception/" folder.
+- Utility classes are always in the "/util/" folder.
+- Mapstruct mapper classes are always in "/mapper/" folder.
+- Properties files are always in the "src/main/resources/" folder or its subfolders.
+- Always work with structured folders. Do not randomly drop files in the root directory or 
