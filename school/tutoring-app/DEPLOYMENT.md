@@ -12,7 +12,9 @@ Production deployment using **Docker Compose** with PostgreSQL.
 | Docker Compose | v2+ | `docker compose version` |
 | Git | any | `git --version` |
 
-A server with at least **1 GB RAM** and **10 GB disk** (any cheap VPS works — Hetzner, DigitalOcean, OVH, Contabo).
+An **AWS Lightsail** instance with at least **1 GB RAM** and **10 GB disk**.
+
+A **domain name** pointed at your Lightsail static IP (A record). HTTPS is handled by a **Lightsail Load Balancer** with a free AWS-managed SSL certificate.
 
 ---
 
@@ -41,11 +43,10 @@ nano .env
 |----------|-------------|---------|
 | `POSTGRES_PASSWORD` | **Required.** Strong database password | `kX9#mP2$vL7nQ4` |
 | `AUTH_SECRET` | **Required.** Generate with `openssl rand -hex 32` | `a2cdb903...` |
-| `AUTH_URL` | **Required.** Your public URL | `https://learn.yourdomain.com` |
+| `AUTH_URL` | **Required.** Your public URL | `https://lionlearning.briskprototyping.com` |
 | `GEMINI_API_KEY` | **Required.** From [AI Studio](https://aistudio.google.com/apikey) | `AIzaSy...` |
 | `POSTGRES_USER` | Database user (default: `lionlearn`) | `lionlearn` |
 | `POSTGRES_DB` | Database name (default: `lionlearn`) | `lionlearn` |
-| `APP_PORT` | Host port (default: `3000`) | `3000` |
 
 ### 1.3 Build and start
 
@@ -57,7 +58,7 @@ This will:
 1. Pull PostgreSQL 16
 2. Build the Next.js application image
 3. Run database migrations automatically (via entrypoint)
-4. Start the app on port 3000
+4. Start the app on port 3000 (the Lightsail Load Balancer handles HTTPS)
 
 ### 1.4 Seed the database (first time only)
 
@@ -80,7 +81,7 @@ docker compose logs app --tail 50
 docker compose exec db pg_isready -U lionlearn
 ```
 
-Visit `http://your-server-ip:3000` (or your domain).
+Visit `https://lionlearning.briskprototyping.com` (or your domain).
 
 **Demo accounts:**
 - Student: `etudiant@uit.cm` / `student123`
@@ -232,94 +233,79 @@ gunzip -c lionlearn_migration.sql.gz | docker compose exec -T db psql -U lionlea
 
 ---
 
-## 7. Reverse Proxy (HTTPS with Nginx)
+## 7. HTTPS with Lightsail Load Balancer
 
-For production, put Nginx + Let's Encrypt in front of the app.
+HTTPS is handled by an **AWS Lightsail Load Balancer** with a free managed SSL certificate. No Nginx or Certbot is needed.
 
-### 7.1 Install Nginx + Certbot
+### 7.1 Create a static IP
 
-```bash
-sudo apt update && sudo apt install -y nginx certbot python3-certbot-nginx
-```
+1. Go to **Lightsail → Networking → Create static IP**
+2. Attach it to your instance
+3. Point your domain's **A record** to this static IP
 
-### 7.2 Nginx config
+### 7.2 Create a Load Balancer
 
-Create `/etc/nginx/sites-available/lionlearn`:
+1. Go to **Lightsail → Networking → Create Load Balancer**
+2. Set the target port to **3000** (HTTP)
+3. Attach your instance to the load balancer
 
-```nginx
-server {
-    server_name learn.yourdomain.com;
+### 7.3 Create an SSL certificate
 
-    location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
+1. In the load balancer settings, go to **Inbound traffic → Create certificate**
+2. Enter your domain: `lionlearning.briskprototyping.com`
+3. Add a **CNAME record** in your DNS as instructed by AWS to validate the domain
+4. Once validated, select the certificate and **enable HTTPS**
 
-        # Allow large file uploads (course materials)
-        client_max_body_size 50M;
-    }
-}
-```
+### 7.4 Firewall
 
-```bash
-sudo ln -s /etc/nginx/sites-available/lionlearn /etc/nginx/sites-enabled/
-sudo nginx -t && sudo systemctl reload nginx
-```
+In your Lightsail instance's **Networking** tab, ensure these ports are open:
 
-### 7.3 SSL certificate
+| Port | Protocol | Purpose |
+|------|----------|--------|
+| 22   | TCP      | SSH    |
+| 3000 | TCP      | App (load balancer → instance) |
 
-```bash
-sudo certbot --nginx -d learn.yourdomain.com
-```
-
-Update your `.env`:
-```
-AUTH_URL=https://learn.yourdomain.com
-```
-
-Then restart:
-```bash
-docker compose restart app
-```
+Public traffic goes through the load balancer (ports 80/443) — the instance only needs to accept traffic from the LB on port 3000.
 
 ---
 
 ## 8. Domain Name
+
+Point your domain's **A record** to your Lightsail static IP, then set up the load balancer SSL certificate as shown in section 7.
 
 To buy a `.cm` domain (Cameroon):
 - [Camtel](https://www.camtel.cm) — official registrar
 - [Namecheap](https://www.namecheap.com) — international, supports many TLDs
 - [Gandi](https://www.gandi.net) — supports `.cm`
 
-Point your domain's **A record** to your server's IP address, then set up HTTPS as shown above.
-
 ---
 
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────┐
-│              Your Server                │
-│                                         │
-│  ┌──────────────┐   ┌───────────────┐   │
-│  │ Nginx (443)  │──▶│ LionLearn App │   │
-│  │ + SSL/HTTPS  │   │ (port 3000)   │   │
-│  └──────────────┘   └───────┬───────┘   │
-│                             │           │
-│                     ┌───────▼───────┐   │
-│                     │ PostgreSQL 16 │   │
-│                     │ (port 5432)   │   │
-│                     └───────────────┘   │
-│                             │           │
-│                     ┌───────▼───────┐   │
-│                     │  pgdata vol   │   │
-│                     │  (persistent) │   │
-│                     └───────────────┘   │
-└─────────────────────────────────────────┘
+                 ┌──────────────────────┐
+                 │  Lightsail LB (AWS)  │
+                 │  HTTPS :443 → :3000  │
+                 │  + managed SSL cert  │
+                 └──────────┬───────────┘
+                            │
+┌───────────────────────────▼──────────────────┐
+│           Lightsail Instance                 │
+│           (Docker Compose)                   │
+│                                              │
+│    ┌───────────────┐                         │
+│    │ LionLearn App │◀── port 3000            │
+│    │  (Next.js)    │                         │
+│    └───────┬───────┘                         │
+│            │                                 │
+│    ┌───────▼───────┐                         │
+│    │ PostgreSQL 16 │                         │
+│    │  (:5432)      │                         │
+│    └───────┬───────┘                         │
+│            │                                 │
+│    ┌───────▼───────┐                         │
+│    │  pgdata vol   │                         │
+│    │ (persistent)  │                         │
+│    └───────────────┘                         │
+└──────────────────────────────────────────────┘
 ```

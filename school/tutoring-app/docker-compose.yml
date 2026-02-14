@@ -9,8 +9,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-lionlearn}
     volumes:
       - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lionlearn}"]
       interval: 5s
@@ -24,7 +22,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "${APP_PORT:-3000}:3000"
+      - "3000:3000"
     environment:
       PGUSER: ${POSTGRES_USER:-lionlearn}
       PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
@@ -33,7 +31,7 @@ services:
       PGPORT: "5432"
       DATABASE_URL: "postgresql://${POSTGRES_USER:-lionlearn}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-lionlearn}"
       AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET in .env}
-      AUTH_URL: ${AUTH_URL:-http://localhost:3000}
+      AUTH_URL: ${AUTH_URL:-https://lionlearning.briskprototyping.com}
       GEMINI_API_KEY: ${GEMINI_API_KEY:?Set GEMINI_API_KEY in .env}
       AUTH_TRUST_HOST: "true"
       COURSES_DIR: /app/course-materials
