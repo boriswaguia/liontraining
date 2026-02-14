@@ -15,6 +15,10 @@ import {
   Menu,
   X,
   TrendingUp,
+  Settings,
+  School,
+  Building2,
+  Users,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -29,6 +33,13 @@ const navigation = [
   { name: "Plan d'Étude", href: "/planner", icon: CalendarDays },
 ];
 
+const adminNavigation = [
+  { name: "Écoles", href: "/admin/schools", icon: School },
+  { name: "Départements", href: "/admin/departments", icon: Building2 },
+  { name: "Classes", href: "/admin/classes", icon: Users },
+  { name: "Cours", href: "/admin/courses", icon: BookOpen },
+];
+
 export default function Sidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -38,6 +49,8 @@ export default function Sidebar() {
   const schoolName = (userExt?.schoolName as string) || "LionLearn";
   const deptCode = (userExt?.departmentCode as string) || "";
   const className = (userExt?.className as string) || "";
+  const userRole = (userExt?.role as string) || "student";
+  const isAdmin = userRole === "admin";
   const subtitle = [deptCode, className].filter(Boolean).join(" · ") || "Plateforme de tutorat";
 
   const handleLogout = async () => {
@@ -61,7 +74,7 @@ export default function Sidebar() {
         </Link>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {navigation.map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
@@ -81,6 +94,36 @@ export default function Sidebar() {
             </Link>
           );
         })}
+
+        {isAdmin && (
+          <>
+            <div className="flex items-center gap-2 px-4 pt-4 pb-1">
+              <Settings className="w-4 h-4 text-blue-300" />
+              <span className="text-xs font-semibold text-blue-300 uppercase tracking-wider">
+                Administration
+              </span>
+            </div>
+            {adminNavigation.map((item) => {
+              const isActive =
+                pathname === item.href || pathname.startsWith(item.href + "/");
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                    isActive
+                      ? "bg-amber-500 text-white shadow-sm"
+                      : "text-blue-100 hover:bg-blue-700 hover:text-white"
+                  }`}
+                >
+                  <item.icon className="w-5 h-5" />
+                  {item.name}
+                </Link>
+              );
+            })}
+          </>
+        )}
       </nav>
 
       <div className="p-4 border-t border-blue-700">

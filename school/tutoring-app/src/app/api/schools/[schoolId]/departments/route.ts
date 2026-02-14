@@ -10,7 +10,7 @@ export async function GET(
     const { schoolId } = await params;
 
     const departments = await prisma.department.findMany({
-      where: { schoolId },
+      where: { schoolId, isActive: true },
       orderBy: { name: "asc" },
       select: {
         id: true,

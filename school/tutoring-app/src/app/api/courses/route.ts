@@ -13,7 +13,9 @@ export async function GET() {
     include: { course: true },
   });
 
-  const courses = enrollments.map((e) => e.course);
+  const courses = enrollments
+    .map((e) => e.course)
+    .filter((c) => c.isActive);
   return NextResponse.json({ courses });
 }
 

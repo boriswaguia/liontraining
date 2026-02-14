@@ -74,7 +74,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="votre.email@uit.cm"
+                placeholder="votre.email@lionai.com"
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
               />
@@ -134,7 +134,7 @@ export default function LoginPage() {
               Compte démo:
             </p>
             <p className="text-xs text-blue-500">
-              Email: etudiant@uit.cm
+              Email: etudiant@lionai.com
               <br />
               Mot de passe: student123
             </p>

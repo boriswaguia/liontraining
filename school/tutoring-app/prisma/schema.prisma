@@ -20,6 +20,7 @@ model School {
   country     String       @default("Cameroun")
   logo        String?      // URL or path to logo
   description String?
+  isActive    Boolean      @default(true)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   departments Department[]
@@ -32,6 +33,7 @@ model Department {
   name        String          // e.g., "Génie Informatique"
   code        String          // e.g., "GI"
   description String?
+  isActive    Boolean         @default(true)
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
   school      School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
@@ -48,6 +50,7 @@ model AcademicClass {
   code          String     // e.g., "L1", "L2", "M1"
   academicYear  String     // e.g., "2025/2026"
   description   String?
+  isActive      Boolean    @default(true)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
   department    Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
@@ -95,6 +98,7 @@ model Course {
   level          Int             @default(1)
   content        String          // Full markdown content
   category       String          // e.g., "math", "cs", "law", "language", "electronics"
+  isActive       Boolean         @default(true)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   academicClass  AcademicClass?  @relation(fields: [classId], references: [id], onDelete: Cascade)
