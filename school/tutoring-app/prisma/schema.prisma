@@ -166,15 +166,17 @@ model FlashcardDeck {
 }
 
 model ChatSession {
-  id        String        @id @default(cuid())
-  userId    String
-  courseId   String
-  title     String
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  messages  ChatMessage[]
-  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course    Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  id          String        @id @default(cuid())
+  userId      String
+  courseId     String
+  title       String
+  contextType String?       // "exercise" | "flashcard" | "study_guide" | "study_plan" | null (general)
+  contextId   String?       // ID of the referenced content
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  messages    ChatMessage[]
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
 }
 
 model ChatMessage {

@@ -4,6 +4,69 @@ import { prisma } from "@/lib/db";
 import { chatWithTutor } from "@/lib/gemini";
 import { buildStudentProfileForLLM, recordActivity } from "@/lib/progress";
 
+async function fetchContextContent(contextType: string, contextId: string): Promise<string> {
+  switch (contextType) {
+    case "exercise": {
+      const exercise = await prisma.exercise.findUnique({ where: { id: contextId } });
+      if (!exercise) return "";
+      const questions = JSON.parse(exercise.questions);
+      const solutions = JSON.parse(exercise.solutions);
+      return `[EXERCISE CONTEXT]
+Topic: ${exercise.topic}
+Difficulty: ${exercise.difficulty}
+Score: ${exercise.score ?? "Not attempted"}
+
+Questions:
+${questions.map((q: string, i: number) => `${i + 1}. ${q}`).join("\n")}
+
+Solutions:
+${solutions.map((s: string, i: number) => `${i + 1}. ${s}`).join("\n")}
+[/EXERCISE CONTEXT]`;
+    }
+    case "flashcard": {
+      const deck = await prisma.flashcardDeck.findUnique({ where: { id: contextId } });
+      if (!deck) return "";
+      const cards = JSON.parse(deck.cards);
+      return `[FLASHCARD CONTEXT]
+Deck: ${deck.title}
+Confidence: ${deck.confidence ?? "Not reviewed"}
+
+Cards:
+${cards.map((c: { front: string; back: string }, i: number) => `${i + 1}. Front: ${c.front}\n   Back: ${c.back}`).join("\n")}
+[/FLASHCARD CONTEXT]`;
+    }
+    case "study_guide": {
+      const guide = await prisma.studyGuide.findUnique({ where: { id: contextId } });
+      if (!guide) return "";
+      return `[STUDY GUIDE CONTEXT]
+Title: ${guide.title}
+Chapter: ${guide.chapter || "General"}
+
+Content:
+${guide.content.substring(0, 15000)}
+[/STUDY GUIDE CONTEXT]`;
+    }
+    case "study_plan": {
+      const plan = await prisma.studyPlan.findUnique({
+        where: { id: contextId },
+        include: { tasks: { orderBy: { dueDate: "asc" } } },
+      });
+      if (!plan) return "";
+      const completedTasks = plan.tasks.filter(t => t.completed).length;
+      return `[STUDY PLAN CONTEXT]
+Title: ${plan.title}
+Period: ${plan.startDate.toISOString().split("T")[0]} to ${plan.endDate.toISOString().split("T")[0]}
+Progress: ${completedTasks}/${plan.tasks.length} tasks completed
+
+Tasks:
+${plan.tasks.map((t, i) => `${i + 1}. [${t.completed ? "✓" : " "}] ${t.title} (due: ${t.dueDate.toISOString().split("T")[0]})${t.description ? `\n   ${t.description}` : ""}`).join("\n")}
+[/STUDY PLAN CONTEXT]`;
+    }
+    default:
+      return "";
+  }
+}
+
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -11,7 +74,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { courseId, sessionId, message } = await req.json();
+    const { courseId, sessionId, message, contextType, contextId } = await req.json();
 
     let chatSession;
 
@@ -39,6 +102,8 @@ export async function POST(req: NextRequest) {
           userId: session.user.id,
           courseId,
           title: message.substring(0, 50) + (message.length > 50 ? "..." : ""),
+          contextType: contextType || null,
+          contextId: contextId || null,
         },
         include: { messages: true, course: true },
       });
@@ -63,13 +128,20 @@ export async function POST(req: NextRequest) {
     const studentProfile = await buildStudentProfileForLLM(session.user.id, course.id);
     const userLanguage = (session.user as { language?: string }).language || "fr";
 
+    // Fetch context content if this chat is about a specific resource
+    let contextContent = "";
+    if (chatSession.contextType && chatSession.contextId) {
+      contextContent = await fetchContextContent(chatSession.contextType, chatSession.contextId);
+    }
+
     const aiResponse = await chatWithTutor(
       course.title,
       course.content,
       messageHistory,
       message,
       studentProfile,
-      userLanguage
+      userLanguage,
+      contextContent
     );
 
     // Save AI response

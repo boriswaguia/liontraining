@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { FileText, Loader2, Plus, BookOpen, CheckCircle2, Circle } from "lucide-react";
+import { FileText, Loader2, Plus, BookOpen, CheckCircle2, Circle, MessageCircle } from "lucide-react";
+import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import { useLanguage } from "@/hooks/useLanguage";
 
@@ -224,6 +225,17 @@ export default function StudyGuidesPage() {
                 </div>
                 <div className="prose max-w-none">
                   <ReactMarkdown>{activeGuide.content}</ReactMarkdown>
+                </div>
+
+                {/* Discuss with AI */}
+                <div className="mt-6 pt-4 border-t border-gray-100">
+                  <Link
+                    href={`/chat?courseId=${activeGuide.course?.id}&contextType=study_guide&contextId=${activeGuide.id}&contextTitle=${encodeURIComponent(activeGuide.title)}`}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-700 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors text-sm font-medium"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    {t("discuss.withAI")}
+                  </Link>
                 </div>
 
                 {/* Completion toggle */}

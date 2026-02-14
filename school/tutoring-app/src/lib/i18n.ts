@@ -411,6 +411,26 @@ const translations = {
     fr: "Aucune conversation. Commencez à discuter !",
     en: "No conversations yet. Start chatting!",
   },
+  "chat.context.exercise": {
+    fr: "Discussion sur un exercice",
+    en: "Discussing an exercise",
+  },
+  "chat.context.flashcard": {
+    fr: "Discussion sur des flashcards",
+    en: "Discussing flashcards",
+  },
+  "chat.context.studyGuide": {
+    fr: "Discussion sur un guide d'étude",
+    en: "Discussing a study guide",
+  },
+  "chat.context.studyPlan": {
+    fr: "Discussion sur un plan d'étude",
+    en: "Discussing a study plan",
+  },
+  "discuss.withAI": {
+    fr: "Discuter avec l'IA",
+    en: "Discuss with AI",
+  },
 
   // ============= PLANNER =============
   "planner.title": { fr: "Plan d'Étude", en: "Study Planner" },

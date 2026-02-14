@@ -9,7 +9,9 @@ import {
   ChevronDown,
   ChevronUp,
   CheckCircle2,
+  MessageCircle,
 } from "lucide-react";
+import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import { useLanguage } from "@/hooks/useLanguage";
 
@@ -374,6 +376,17 @@ export default function ExercisesPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+
+                {/* Discuss with AI */}
+                <div className="mt-6 pt-4 border-t border-gray-100">
+                  <Link
+                    href={`/chat?courseId=${activeExercise.course?.id}&contextType=exercise&contextId=${activeExercise.id}&contextTitle=${encodeURIComponent(activeExercise.topic)}`}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-700 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors text-sm font-medium"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    {t("discuss.withAI")}
+                  </Link>
                 </div>
 
                 {/* Self-Scoring Section */}

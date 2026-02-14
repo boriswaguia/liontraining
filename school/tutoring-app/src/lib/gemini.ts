@@ -184,7 +184,8 @@ export async function chatWithTutor(
   messageHistory: Array<{ role: string; content: string }>,
   newMessage: string,
   studentProfile?: string,
-  language: string = "fr"
+  language: string = "fr",
+  contextContent: string = ""
 ): Promise<string> {
   const model = getGeminiModel();
 
@@ -197,10 +198,15 @@ export async function chatWithTutor(
     ? "IMPORTANT: Respond in English."
     : "IMPORTANT: Réponds en français.";
 
+  const contextSection = contextContent
+    ? `\nThe student is asking about the following content they generated on the platform. Use it to give precise, relevant answers:\n${contextContent}\n`
+    : "";
+
   const prompt = `You are a patient, knowledgeable tutor helping a university student understand their course material.
 
 Course: ${courseTitle}
 ${profileSection}
+${contextSection}
 
 ${langInstruction}
 
@@ -212,6 +218,10 @@ Your role:
 - Use analogies from everyday life when possible
 - If student profile is provided, adapt your explanations to their level and focus on their weak areas
 - Acknowledge their progress and encourage improvement
+- If discussing an exercise, help the student understand the solution step by step without just giving the answer
+- If discussing flashcards, help deepen understanding of the concepts
+- If discussing a study guide, clarify or expand on specific sections
+- If discussing a study plan, help the student stay on track and adjust if needed
 
 Course Material for Reference:
 ${courseContent.substring(0, 20000)}

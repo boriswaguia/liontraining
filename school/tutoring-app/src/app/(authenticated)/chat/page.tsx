@@ -9,9 +9,14 @@ import {
   Plus,
   Bot,
   User,
+  Lightbulb,
+  GraduationCap,
+  FileText,
+  CalendarDays,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useLanguage } from "@/hooks/useLanguage";
+import type { TranslationKey } from "@/lib/i18n";
 
 interface Course {
   id: string;
@@ -24,6 +29,7 @@ interface ChatSessionItem {
   title: string;
   createdAt: string;
   course: Course;
+  contextType?: string | null;
 }
 
 interface Message {
@@ -31,10 +37,20 @@ interface Message {
   content: string;
 }
 
+const CONTEXT_LABELS: Record<string, { icon: typeof MessageCircle; labelKey: TranslationKey; color: string }> = {
+  exercise: { icon: Lightbulb, labelKey: "chat.context.exercise", color: "bg-yellow-50 text-yellow-700 border-yellow-200" },
+  flashcard: { icon: GraduationCap, labelKey: "chat.context.flashcard", color: "bg-purple-50 text-purple-700 border-purple-200" },
+  study_guide: { icon: FileText, labelKey: "chat.context.studyGuide", color: "bg-green-50 text-green-700 border-green-200" },
+  study_plan: { icon: CalendarDays, labelKey: "chat.context.studyPlan", color: "bg-blue-50 text-blue-700 border-blue-200" },
+};
+
 export default function ChatPage() {
   const { language: lang, t } = useLanguage();
   const searchParams = useSearchParams();
   const preselectedCourseId = searchParams.get("courseId");
+  const contextType = searchParams.get("contextType");
+  const contextId = searchParams.get("contextId");
+  const contextTitle = searchParams.get("contextTitle");
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [sessions, setSessions] = useState<ChatSessionItem[]>([]);
@@ -42,6 +58,7 @@ export default function ChatPage() {
     preselectedCourseId || ""
   );
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [activeContextType, setActiveContextType] = useState<string | null>(contextType);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -70,6 +87,7 @@ export default function ChatPage() {
     if (data.session) {
       setActiveSessionId(data.session.id);
       setSelectedCourse(data.session.courseId);
+      setActiveContextType(data.session.contextType || null);
       setMessages(
         data.session.messages.map((m: { role: string; content: string }) => ({
           role: m.role,
@@ -81,6 +99,7 @@ export default function ChatPage() {
 
   const startNewChat = () => {
     setActiveSessionId(null);
+    setActiveContextType(null);
     setMessages([]);
   };
 
@@ -100,6 +119,8 @@ export default function ChatPage() {
           courseId: selectedCourse,
           sessionId: activeSessionId,
           message: userMessage,
+          contextType: !activeSessionId ? contextType : undefined,
+          contextId: !activeSessionId ? contextId : undefined,
         }),
       });
       const data = await res.json();
@@ -193,6 +214,10 @@ export default function ChatPage() {
                   }`}
                 >
                   <p className="font-medium text-gray-700 truncate text-xs">
+                    {s.contextType && CONTEXT_LABELS[s.contextType] && (() => {
+                      const Icon = CONTEXT_LABELS[s.contextType!].icon;
+                      return <Icon className="w-3 h-3 inline mr-1 opacity-60" />;
+                    })()}
                     {s.title}
                   </p>
                   <p className="text-xs text-gray-400 mt-0.5">
@@ -210,6 +235,15 @@ export default function ChatPage() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 h-full flex flex-col">
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {/* Context Banner */}
+              {activeContextType && CONTEXT_LABELS[activeContextType] && (
+                <div className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm ${CONTEXT_LABELS[activeContextType].color}`}>
+                  {(() => { const Icon = CONTEXT_LABELS[activeContextType].icon; return <Icon className="w-4 h-4" />; })()}
+                  <span className="font-medium">{t(CONTEXT_LABELS[activeContextType].labelKey)}</span>
+                  {contextTitle && <span className="opacity-75">— {contextTitle}</span>}
+                </div>
+              )}
+
               {messages.length === 0 && (
                 <div className="text-center py-16 text-gray-400">
                   <Bot className="w-16 h-16 mx-auto mb-3 opacity-30" />
