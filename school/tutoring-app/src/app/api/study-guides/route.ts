@@ -74,3 +74,35 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ guides });
 }
+
+export async function PATCH(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  }
+
+  try {
+    const { guideId, completed } = await req.json();
+
+    const guide = await prisma.studyGuide.findFirst({
+      where: { id: guideId, userId: session.user.id },
+    });
+
+    if (!guide) {
+      return NextResponse.json({ error: "Guide non trouvé" }, { status: 404 });
+    }
+
+    await prisma.studyGuide.update({
+      where: { id: guideId },
+      data: { completed },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Study guide PATCH error:", error);
+    return NextResponse.json(
+      { error: "Erreur lors de la mise à jour" },
+      { status: 500 }
+    );
+  }
+}

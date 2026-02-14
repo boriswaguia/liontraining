@@ -9,6 +9,8 @@ import {
   ChevronLeft,
   ChevronRight,
   RotateCcw,
+  CheckCircle2,
+  Star,
 } from "lucide-react";
 
 interface Course {
@@ -21,6 +23,8 @@ interface FlashcardDeck {
   id: string;
   title: string;
   cards: string;
+  reviewed: boolean;
+  confidence: number | null;
   createdAt: string;
   course: Course;
 }
@@ -44,6 +48,8 @@ export default function FlashcardsPage() {
   const [activeDeck, setActiveDeck] = useState<FlashcardDeck | null>(null);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [showConfidence, setShowConfidence] = useState(false);
+  const [savingConfidence, setSavingConfidence] = useState(false);
 
   useEffect(() => {
     fetch("/api/courses")
@@ -95,6 +101,9 @@ export default function FlashcardsPage() {
     if (currentCardIndex < cards.length - 1) {
       setCurrentCardIndex((i) => i + 1);
       setIsFlipped(false);
+    } else {
+      // Last card reached - show confidence rating
+      setShowConfidence(true);
     }
   };
 
@@ -108,6 +117,33 @@ export default function FlashcardsPage() {
   const resetDeck = () => {
     setCurrentCardIndex(0);
     setIsFlipped(false);
+    setShowConfidence(false);
+  };
+
+  const submitConfidence = async (confidence: number) => {
+    if (!activeDeck || savingConfidence) return;
+    setSavingConfidence(true);
+    try {
+      await fetch("/api/flashcards", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deckId: activeDeck.id,
+          reviewed: true,
+          confidence,
+        }),
+      });
+      const updated = { ...activeDeck, reviewed: true, confidence };
+      setActiveDeck(updated);
+      setDecks((prev) =>
+        prev.map((d) => (d.id === updated.id ? updated : d))
+      );
+      setShowConfidence(false);
+    } catch (error) {
+      console.error("Confidence error:", error);
+    } finally {
+      setSavingConfidence(false);
+    }
   };
 
   return (
@@ -194,6 +230,7 @@ export default function FlashcardsPage() {
                       setActiveDeck(deck);
                       setCurrentCardIndex(0);
                       setIsFlipped(false);
+                      setShowConfidence(false);
                     }}
                     className={`w-full text-left p-3 rounded-lg transition-colors ${
                       activeDeck?.id === deck.id
@@ -201,12 +238,28 @@ export default function FlashcardsPage() {
                         : "hover:bg-gray-50 border border-transparent"
                     }`}
                   >
-                    <p className="font-medium text-sm text-gray-800 truncate">
-                      {deck.title}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {deck.course?.code} • {deckCards.length} cartes
-                    </p>
+                    <div className="flex items-start gap-2">
+                      {deck.reviewed ? (
+                        <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                      ) : (
+                        <div className="w-4 h-4 rounded-full border-2 border-gray-300 mt-0.5 flex-shrink-0" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm text-gray-800 truncate">
+                          {deck.title}
+                        </p>
+                        <div className="flex items-center gap-1 mt-1">
+                          <span className="text-xs text-gray-400">
+                            {deck.course?.code} • {deckCards.length} cartes
+                          </span>
+                          {deck.confidence !== null && (
+                            <span className="text-xs px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 ml-1">
+                              {deck.confidence}%
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </button>
                 );
               })}
@@ -249,12 +302,12 @@ export default function FlashcardsPage() {
 
                 {/* Card */}
                 <div
-                  className="flashcard-container mx-auto max-w-lg cursor-pointer"
+                  className={`flashcard-container mx-auto max-w-lg cursor-pointer ${isFlipped ? "flashcard-flipped" : ""}`}
                   style={{ height: "300px" }}
                   onClick={() => setIsFlipped(!isFlipped)}
                 >
                   <div
-                    className={`flashcard-inner ${isFlipped ? "flashcard-flipped" : ""}`}
+                    className="flashcard-inner"
                     style={{ height: "300px" }}
                   >
                     <div className="flashcard-front bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-lg">
@@ -300,12 +353,73 @@ export default function FlashcardsPage() {
                   </span>
                   <button
                     onClick={nextCard}
-                    disabled={currentCardIndex === cards.length - 1}
+                    disabled={showConfidence}
                     className="p-3 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronRight className="w-5 h-5" />
                   </button>
                 </div>
+
+                {/* Confidence Rating (shown after completing all cards) */}
+                {showConfidence && !activeDeck.reviewed && (
+                  <div className="mt-6 pt-4 border-t border-gray-100">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-1 text-center">
+                      Deck terminé ! Comment vous sentez-vous ?
+                    </h3>
+                    <p className="text-xs text-gray-400 mb-4 text-center">
+                      Évaluez votre niveau de confiance sur ce deck
+                    </p>
+                    <div className="grid grid-cols-5 gap-2 max-w-md mx-auto">
+                      {[
+                        { score: 20, label: "20%", desc: "Très flou", color: "bg-red-100 hover:bg-red-200 text-red-700" },
+                        { score: 40, label: "40%", desc: "Difficile", color: "bg-orange-100 hover:bg-orange-200 text-orange-700" },
+                        { score: 60, label: "60%", desc: "Moyen", color: "bg-yellow-100 hover:bg-yellow-200 text-yellow-700" },
+                        { score: 80, label: "80%", desc: "Bien", color: "bg-blue-100 hover:bg-blue-200 text-blue-700" },
+                        { score: 100, label: "100%", desc: "Maîtrisé", color: "bg-green-100 hover:bg-green-200 text-green-700" },
+                      ].map((opt) => (
+                        <button
+                          key={opt.score}
+                          onClick={() => submitConfidence(opt.score)}
+                          disabled={savingConfidence}
+                          className={`${opt.color} rounded-lg p-3 text-center transition-colors disabled:opacity-50`}
+                        >
+                          <p className="text-lg font-bold">{opt.label}</p>
+                          <p className="text-xs">{opt.desc}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Already reviewed badge */}
+                {activeDeck.reviewed && (
+                  <div className="mt-6 pt-4 border-t border-gray-100">
+                    <div className="flex items-center justify-center gap-2 bg-green-50 rounded-lg p-3 border border-green-200">
+                      <CheckCircle2 className="w-5 h-5 text-green-500" />
+                      <span className="text-sm font-medium text-green-700">
+                        Deck révisé
+                        {activeDeck.confidence !== null && (
+                          <> — Confiance: {activeDeck.confidence}%</>
+                        )}
+                      </span>
+                      <button
+                        onClick={() => {
+                          resetDeck();
+                          setShowConfidence(false);
+                          // Allow re-review
+                          const updated = { ...activeDeck, reviewed: false, confidence: null };
+                          setActiveDeck(updated);
+                          setDecks((prev) =>
+                            prev.map((d) => (d.id === updated.id ? updated : d))
+                          );
+                        }}
+                        className="ml-2 text-xs text-green-600 hover:text-green-800 underline"
+                      >
+                        Réviser à nouveau
+                      </button>
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
               <div className="flex items-center justify-center h-full text-gray-400">

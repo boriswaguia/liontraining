@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { FileText, Loader2, Plus, BookOpen } from "lucide-react";
+import { FileText, Loader2, Plus, BookOpen, CheckCircle2, Circle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 interface Course {
@@ -17,6 +17,7 @@ interface StudyGuide {
   title: string;
   content: string;
   chapter: string | null;
+  completed: boolean;
   createdAt: string;
   course: Course;
 }
@@ -33,6 +34,24 @@ export default function StudyGuidesPage() {
   const [chapter, setChapter] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeGuide, setActiveGuide] = useState<StudyGuide | null>(null);
+
+  const toggleGuideComplete = async (guideId: string, completed: boolean) => {
+    try {
+      await fetch("/api/study-guides", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ guideId, completed }),
+      });
+      setGuides((prev) =>
+        prev.map((g) => (g.id === guideId ? { ...g, completed } : g))
+      );
+      if (activeGuide?.id === guideId) {
+        setActiveGuide((prev) => (prev ? { ...prev, completed } : prev));
+      }
+    } catch (error) {
+      console.error("Error toggling guide:", error);
+    }
+  };
 
   useEffect(() => {
     fetch("/api/courses")
@@ -165,13 +184,22 @@ export default function StudyGuidesPage() {
                         : "hover:bg-gray-50 border border-transparent"
                     }`}
                   >
-                    <p className="font-medium text-sm text-gray-800 truncate">
-                      {guide.title}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {guide.course?.code} •{" "}
-                      {new Date(guide.createdAt).toLocaleDateString("fr-FR")}
-                    </p>
+                    <div className="flex items-start gap-2">
+                      {guide.completed ? (
+                        <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                      ) : (
+                        <Circle className="w-4 h-4 text-gray-300 mt-0.5 flex-shrink-0" />
+                      )}
+                      <div className="min-w-0">
+                        <p className={`font-medium text-sm truncate ${guide.completed ? "text-green-700" : "text-gray-800"}`}>
+                          {guide.title}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {guide.course?.code} •{" "}
+                          {new Date(guide.createdAt).toLocaleDateString("fr-FR")}
+                        </p>
+                      </div>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -194,6 +222,27 @@ export default function StudyGuidesPage() {
                 </div>
                 <div className="prose max-w-none">
                   <ReactMarkdown>{activeGuide.content}</ReactMarkdown>
+                </div>
+
+                {/* Completion toggle */}
+                <div className="mt-6 pt-4 border-t border-gray-100">
+                  {activeGuide.completed ? (
+                    <button
+                      onClick={() => toggleGuideComplete(activeGuide.id, false)}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-green-50 text-green-700 rounded-lg border border-green-200 hover:bg-green-100 transition-colors"
+                    >
+                      <CheckCircle2 className="w-5 h-5" />
+                      <span className="font-medium text-sm">Guide lu et compris</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => toggleGuideComplete(activeGuide.id, true)}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 text-gray-600 rounded-lg border border-gray-200 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
+                    >
+                      <Circle className="w-5 h-5" />
+                      <span className="font-medium text-sm">Marquer comme lu</span>
+                    </button>
+                  )}
                 </div>
               </>
             ) : (

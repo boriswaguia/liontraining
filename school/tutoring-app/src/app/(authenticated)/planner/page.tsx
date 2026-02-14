@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Circle,
   Clock,
+  Trophy,
 } from "lucide-react";
 
 interface Course {
@@ -352,6 +353,21 @@ export default function PlannerPage() {
                     );
                   })}
                 </div>
+
+                {/* Celebration when plan is 100% complete */}
+                {totalTasks > 0 && completedTasks === totalTasks && (
+                  <div className="mt-6 p-4 bg-gradient-to-r from-yellow-50 to-green-50 rounded-xl border border-yellow-200">
+                    <div className="flex items-center gap-3">
+                      <Trophy className="w-8 h-8 text-yellow-500" />
+                      <div>
+                        <p className="font-bold text-gray-800">Plan terminé !</p>
+                        <p className="text-sm text-gray-600">
+                          Félicitations ! Vous avez complété toutes les tâches de ce plan.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
               <div className="flex items-center justify-center h-full text-gray-400">

@@ -74,3 +74,38 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ decks });
 }
+
+export async function PATCH(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  }
+
+  try {
+    const { deckId, reviewed, confidence } = await req.json();
+
+    const deck = await prisma.flashcardDeck.findFirst({
+      where: { id: deckId, userId: session.user.id },
+    });
+
+    if (!deck) {
+      return NextResponse.json({ error: "Deck non trouvé" }, { status: 404 });
+    }
+
+    await prisma.flashcardDeck.update({
+      where: { id: deckId },
+      data: {
+        reviewed: reviewed ?? true,
+        confidence: confidence ?? undefined,
+      },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Flashcard PATCH error:", error);
+    return NextResponse.json(
+      { error: "Erreur lors de la mise à jour" },
+      { status: 500 }
+    );
+  }
+}

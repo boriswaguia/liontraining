@@ -69,6 +69,7 @@ model StudyGuide {
   title     String
   content   String   // AI-generated markdown
   chapter   String?  // Optional: specific chapter/topic
+  completed Boolean  @default(false)
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)

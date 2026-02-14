@@ -256,6 +256,7 @@ export default function ExercisesPage() {
                   onClick={() => {
                     setActiveExercise(ex);
                     setShowSolutions({});
+                    setScoreResult(null);
                   }}
                   className={`w-full text-left p-3 rounded-lg transition-colors ${
                     activeExercise?.id === ex.id
@@ -263,21 +264,36 @@ export default function ExercisesPage() {
                       : "hover:bg-gray-50 border border-transparent"
                   }`}
                 >
-                  <p className="font-medium text-sm text-gray-800">
-                    {ex.topic}
-                  </p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-full ${
-                        DIFFICULTY_LABELS[ex.difficulty]?.color ||
-                        "bg-gray-100"
-                      }`}
-                    >
-                      {DIFFICULTY_LABELS[ex.difficulty]?.label || ex.difficulty}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {ex.course?.code}
-                    </span>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm text-gray-800">
+                        {ex.topic}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full ${
+                            DIFFICULTY_LABELS[ex.difficulty]?.color ||
+                            "bg-gray-100"
+                          }`}
+                        >
+                          {DIFFICULTY_LABELS[ex.difficulty]?.label || ex.difficulty}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {ex.course?.code}
+                        </span>
+                      </div>
+                    </div>
+                    {ex.score !== null && (
+                      <span className={`text-xs font-bold px-2 py-1 rounded-full flex-shrink-0 ${
+                        ex.score >= 75
+                          ? "bg-green-100 text-green-700"
+                          : ex.score >= 50
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-red-100 text-red-700"
+                      }`}>
+                        {ex.score}%
+                      </span>
+                    )}
                   </div>
                 </button>
               ))}
