@@ -18,6 +18,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email as string },
+          include: {
+            school: { select: { id: true, shortName: true } },
+            department: { select: { id: true, code: true, name: true } },
+            academicClass: { select: { id: true, name: true, academicYear: true } },
+          },
         });
 
         if (!user) return null;
@@ -34,6 +39,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           name: user.name,
           email: user.email,
           role: user.role,
+          schoolName: user.school?.shortName || null,
+          departmentCode: user.department?.code || null,
+          className: user.academicClass?.name || null,
         };
       },
     }),
@@ -42,14 +50,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = (user as { role?: string }).role;
+        token.role = (user as Record<string, unknown>).role as string;
+        token.schoolName = (user as Record<string, unknown>).schoolName as string | null;
+        token.departmentCode = (user as Record<string, unknown>).departmentCode as string | null;
+        token.className = (user as Record<string, unknown>).className as string | null;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        (session.user as { role?: string }).role = token.role as string;
+        (session.user as Record<string, unknown>).role = token.role as string;
+        (session.user as Record<string, unknown>).schoolName = token.schoolName;
+        (session.user as Record<string, unknown>).departmentCode = token.departmentCode;
+        (session.user as Record<string, unknown>).className = token.className;
       }
       return session;
     },

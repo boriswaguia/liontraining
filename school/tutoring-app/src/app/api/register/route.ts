@@ -4,11 +4,12 @@ import { prisma } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password, schoolId, departmentId, classId } =
+      await req.json();
 
     if (!name || !email || !password) {
       return NextResponse.json(
-        { error: "Tous les champs sont obligatoires" },
+        { error: "Nom, email et mot de passe sont obligatoires" },
         { status: 400 }
       );
     }
@@ -16,6 +17,40 @@ export async function POST(req: NextRequest) {
     if (password.length < 6) {
       return NextResponse.json(
         { error: "Le mot de passe doit contenir au moins 6 caractères" },
+        { status: 400 }
+      );
+    }
+
+    if (!schoolId || !departmentId || !classId) {
+      return NextResponse.json(
+        { error: "Veuillez sélectionner votre école, département et classe" },
+        { status: 400 }
+      );
+    }
+
+    // Validate the class exists and belongs to the right hierarchy
+    const academicClass = await prisma.academicClass.findUnique({
+      where: { id: classId },
+      include: {
+        department: {
+          include: { school: true },
+        },
+      },
+    });
+
+    if (!academicClass) {
+      return NextResponse.json(
+        { error: "Classe non trouvée" },
+        { status: 404 }
+      );
+    }
+
+    if (
+      academicClass.departmentId !== departmentId ||
+      academicClass.department.schoolId !== schoolId
+    ) {
+      return NextResponse.json(
+        { error: "Sélection incohérente" },
         { status: 400 }
       );
     }
@@ -39,17 +74,24 @@ export async function POST(req: NextRequest) {
         email,
         password: hashedPassword,
         role: "student",
+        schoolId,
+        departmentId,
+        classId,
       },
     });
 
-    // Auto-enroll in all available courses
-    const courses = await prisma.course.findMany();
-    for (const course of courses) {
-      await prisma.enrollment.create({
-        data: {
+    // Auto-enroll in all courses for the selected class
+    const courses = await prisma.course.findMany({
+      where: { classId },
+    });
+
+    if (courses.length > 0) {
+      await prisma.enrollment.createMany({
+        data: courses.map((course) => ({
           userId: user.id,
           courseId: course.id,
-        },
+        })),
+        skipDuplicates: true,
       });
     }
 
@@ -57,6 +99,7 @@ export async function POST(req: NextRequest) {
       {
         message: "Compte créé avec succès",
         user: { id: user.id, name: user.name, email: user.email },
+        enrolledCourses: courses.length,
       },
       { status: 201 }
     );

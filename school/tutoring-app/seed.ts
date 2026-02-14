@@ -120,38 +120,101 @@ const COURSES: CourseDefinition[] = [
 ];
 
 async function main() {
-  console.log("🌱 Seeding database...");
+  console.log("🌱 Seeding database...\n");
 
-  // Create demo student account
+  // ============ 1. Create School ============
+  const school = await prisma.school.upsert({
+    where: { shortName: "UIT Douala" },
+    update: {},
+    create: {
+      name: "Institut Universitaire de Technologie de Douala",
+      shortName: "UIT Douala",
+      city: "Douala",
+      country: "Cameroun",
+      description:
+        "L'IUT de Douala est un établissement d'enseignement supérieur technologique au Cameroun.",
+    },
+  });
+  console.log(`🏫 School: ${school.shortName} (${school.id})`);
+
+  // ============ 2. Create Department ============
+  const department = await prisma.department.upsert({
+    where: { schoolId_code: { schoolId: school.id, code: "GI" } },
+    update: {},
+    create: {
+      schoolId: school.id,
+      name: "Génie Informatique",
+      code: "GI",
+      description:
+        "Département de Génie Informatique - Formation en développement logiciel, réseaux et systèmes.",
+    },
+  });
+  console.log(`📂 Department: ${department.code} - ${department.name}`);
+
+  // ============ 3. Create Academic Class ============
+  const academicClass = await prisma.academicClass.upsert({
+    where: {
+      departmentId_code_academicYear: {
+        departmentId: department.id,
+        code: "L1",
+        academicYear: "2025/2026",
+      },
+    },
+    update: {},
+    create: {
+      departmentId: department.id,
+      name: "Licence 1",
+      code: "L1",
+      academicYear: "2025/2026",
+      description: "Première année de la licence en Génie Informatique",
+    },
+  });
+  console.log(
+    `🎓 Class: ${academicClass.name} (${academicClass.code}) - ${academicClass.academicYear}`
+  );
+
+  // ============ 4. Create Demo Users ============
   const hashedPassword = await bcrypt.hash("student123", 10);
   const student = await prisma.user.upsert({
     where: { email: "etudiant@uit.cm" },
-    update: {},
+    update: {
+      schoolId: school.id,
+      departmentId: department.id,
+      classId: academicClass.id,
+    },
     create: {
       name: "Étudiant Demo",
       email: "etudiant@uit.cm",
       password: hashedPassword,
       role: "student",
+      schoolId: school.id,
+      departmentId: department.id,
+      classId: academicClass.id,
     },
   });
-  console.log(`✅ Demo student created: ${student.email}`);
+  console.log(`👤 Student: ${student.email}`);
 
-  // Create admin account
   const adminPassword = await bcrypt.hash("admin123", 10);
   const admin = await prisma.user.upsert({
     where: { email: "admin@uit.cm" },
-    update: {},
+    update: {
+      schoolId: school.id,
+      departmentId: department.id,
+    },
     create: {
       name: "Administrateur",
       email: "admin@uit.cm",
       password: adminPassword,
       role: "admin",
+      schoolId: school.id,
+      departmentId: department.id,
     },
   });
-  console.log(`✅ Admin created: ${admin.email}`);
+  console.log(`👤 Admin: ${admin.email}`);
 
-  // Seed courses from markdown files
+  // ============ 5. Seed Courses (linked to class) ============
   const coursesDir = path.resolve(__dirname, "../uit/gi/2025");
+  console.log(`\n📚 Loading courses from: ${coursesDir}\n`);
 
   for (const courseDef of COURSES) {
     const filePath = path.join(coursesDir, courseDef.filename);
@@ -159,9 +222,11 @@ async function main() {
 
     try {
       content = fs.readFileSync(filePath, "utf-8");
-      console.log(`📄 Loaded: ${courseDef.filename}`);
+      console.log(`  📄 Loaded: ${courseDef.filename}`);
     } catch {
-      console.warn(`⚠️  File not found: ${courseDef.filename}, using placeholder content`);
+      console.warn(
+        `  ⚠️  File not found: ${courseDef.filename}, using placeholder`
+      );
       content = `# ${courseDef.title}\n\n${courseDef.description}`;
     }
 
@@ -175,6 +240,7 @@ async function main() {
         level: courseDef.level,
         content: content,
         category: courseDef.category,
+        classId: academicClass.id,
       },
       create: {
         code: courseDef.code,
@@ -185,10 +251,11 @@ async function main() {
         level: courseDef.level,
         content: content,
         category: courseDef.category,
+        classId: academicClass.id,
       },
     });
 
-    // Auto-enroll demo student in all courses
+    // Auto-enroll demo student
     await prisma.enrollment.upsert({
       where: {
         userId_courseId: {
@@ -203,13 +270,15 @@ async function main() {
       },
     });
 
-    console.log(`✅ Course seeded: ${courseDef.code} - ${courseDef.title}`);
+    console.log(`  ✅ ${courseDef.code} - ${courseDef.title}`);
   }
 
   console.log("\n🎉 Database seeded successfully!");
   console.log("\n📋 Demo Accounts:");
   console.log("   Student: etudiant@uit.cm / student123");
   console.log("   Admin:   admin@uit.cm / admin123");
+  console.log(`\n🏫 Hierarchy: ${school.shortName} → ${department.code} → ${academicClass.name} (${academicClass.academicYear})`);
+  console.log(`📚 ${COURSES.length} courses linked to ${academicClass.name}`);
 }
 
 main()

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   BookOpen,
   GraduationCap,
@@ -31,6 +32,13 @@ const navigation = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: session } = useSession();
+
+  const userExt = session?.user as Record<string, unknown> | undefined;
+  const schoolName = (userExt?.schoolName as string) || "LionLearn";
+  const deptCode = (userExt?.departmentCode as string) || "";
+  const className = (userExt?.className as string) || "";
+  const subtitle = [deptCode, className].filter(Boolean).join(" · ") || "Plateforme de tutorat";
 
   const handleLogout = async () => {
     const res = await fetch("/api/auth/signout", { method: "POST" });
@@ -46,9 +54,9 @@ export default function Sidebar() {
           <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
             <GraduationCap className="w-6 h-6 text-blue-600" />
           </div>
-          <div>
-            <h1 className="text-white font-bold text-lg">UIT Tuteur</h1>
-            <p className="text-blue-200 text-xs">IUT de Douala</p>
+          <div className="min-w-0">
+            <h1 className="text-white font-bold text-lg truncate">{schoolName}</h1>
+            <p className="text-blue-200 text-xs truncate">{subtitle}</p>
           </div>
         </Link>
       </div>

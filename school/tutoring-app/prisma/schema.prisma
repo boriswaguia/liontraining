@@ -10,14 +10,69 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============= MULTI-SCHOOL HIERARCHY =============
+
+model School {
+  id          String       @id @default(cuid())
+  name        String       // e.g., "Institut Universitaire de Technologie de Douala"
+  shortName   String       @unique // e.g., "UIT Douala"
+  city        String       // e.g., "Douala"
+  country     String       @default("Cameroun")
+  logo        String?      // URL or path to logo
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  departments Department[]
+  users       User[]
+}
+
+model Department {
+  id          String          @id @default(cuid())
+  schoolId    String
+  name        String          // e.g., "Génie Informatique"
+  code        String          // e.g., "GI"
+  description String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  school      School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classes     AcademicClass[]
+  users       User[]
+
+  @@unique([schoolId, code])
+}
+
+model AcademicClass {
+  id            String     @id @default(cuid())
+  departmentId  String
+  name          String     // e.g., "Licence 1" or "MTIN 1"
+  code          String     // e.g., "L1", "L2", "M1"
+  academicYear  String     // e.g., "2025/2026"
+  description   String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  department    Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  courses       Course[]
+  users         User[]
+
+  @@unique([departmentId, code, academicYear])
+}
+
+// ============= USERS & COURSES =============
+
 model User {
   id             String          @id @default(cuid())
   name           String
   email          String          @unique
   password       String
-  role           String          @default("student") // student | admin
+  role           String          @default("student") // student | admin | school_admin
+  schoolId       String?
+  departmentId   String?
+  classId        String?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
+  school         School?         @relation(fields: [schoolId], references: [id])
+  department     Department?     @relation(fields: [departmentId], references: [id])
+  academicClass  AcademicClass?  @relation(fields: [classId], references: [id])
   enrollments    Enrollment[]
   studyGuides    StudyGuide[]
   exercises      Exercise[]
@@ -31,6 +86,7 @@ model User {
 
 model Course {
   id             String          @id @default(cuid())
+  classId        String?
   code           String          @unique
   title          String
   description    String
@@ -41,6 +97,7 @@ model Course {
   category       String          // e.g., "math", "cs", "law", "language", "electronics"
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
+  academicClass  AcademicClass?  @relation(fields: [classId], references: [id], onDelete: Cascade)
   enrollments    Enrollment[]
   studyGuides    StudyGuide[]
   exercises      Exercise[]

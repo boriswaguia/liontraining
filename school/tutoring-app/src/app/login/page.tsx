@@ -47,9 +47,9 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg mb-4">
             <GraduationCap className="w-8 h-8 text-blue-600" />
           </div>
-          <h1 className="text-3xl font-bold text-white">UIT Tuteur</h1>
+          <h1 className="text-3xl font-bold text-white">LionLearn</h1>
           <p className="text-blue-200 mt-2">
-            Plateforme d&apos;aide aux étudiants - IUT de Douala
+            Plateforme de tutorat intelligent pour étudiants
           </p>
         </div>
 
