@@ -160,6 +160,7 @@ const translations = {
   "nav.admin.departments": { fr: "Départements", en: "Departments" },
   "nav.admin.classes": { fr: "Classes", en: "Classes" },
   "nav.admin.courses": { fr: "Cours", en: "Courses" },
+  "nav.admin.users": { fr: "Utilisateurs", en: "Users" },
   "nav.logout": { fr: "Déconnexion", en: "Logout" },
   "nav.subtitle.default": {
     fr: "Plateforme de tutorat",
@@ -667,5 +668,6 @@ export function getAdminNavigation(lang: Language) {
     { name: t("nav.admin.departments", lang), href: "/admin/departments" },
     { name: t("nav.admin.classes", lang), href: "/admin/classes" },
     { name: t("nav.admin.courses", lang), href: "/admin/courses" },
+    { name: t("nav.admin.users", lang), href: "/admin/users" },
   ];
 }

@@ -70,6 +70,7 @@ model User {
   password       String
   role           String          @default("student") // student | admin | school_admin
   language       String          @default("fr")     // fr | en
+  isActive       Boolean         @default(true)
   schoolId       String?
   departmentId   String?
   classId        String?
