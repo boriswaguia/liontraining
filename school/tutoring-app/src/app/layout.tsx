@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "UIT Tuteur - Plateforme d'Aide aux Étudiants",
+  title: "LionLearn — Intelligent Tutoring Platform",
   description:
-    "Plateforme de tutorat IA pour les étudiants de l'IUT de Douala - Génie Informatique",
+    "AI-powered tutoring platform helping university students master their courses with personalized exercises, flashcards, study plans, and an AI tutor.",
 };
 
 export default function RootLayout({
