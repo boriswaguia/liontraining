@@ -1,3 +1,13 @@
+---
+code: MTIN-114
+title: Droit / Aspects Juridiques des TIC
+description: Règle de droit, sources du droit, contrats, droit du travail, aspects juridiques des technologies
+hours: 36
+semester: 1
+level: 1
+category: law
+---
+
 # MTIN 114 Droit
 
 

@@ -5,196 +5,106 @@ import * as bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-interface CourseDefinition {
+// ── Metadata interfaces ──────────────────────────────────────────
+interface SchoolMeta {
+  name: string;
+  shortName: string;
+  city: string;
+  country?: string;
+  description?: string;
+  logo?: string;
+}
+
+interface DepartmentMeta {
+  name: string;
+  code: string;
+  description?: string;
+}
+
+interface ClassMeta {
+  name: string;
+  code: string;
+  academicYear: string;
+  description?: string;
+}
+
+interface CourseFrontmatter {
   code: string;
   title: string;
   description: string;
-  hours: number;
-  semester: number;
-  level: number;
-  category: string;
-  filename: string;
+  hours?: number;
+  semester?: number;
+  level?: number;
+  category?: string;
 }
 
-const COURSES: CourseDefinition[] = [
-  {
-    code: "MTIN-121",
-    title: "Analyse Mathématique",
-    description:
-      "Nombres complexes, équations, forme trigonométrique et exponentielle, formule de Moivre, séries et suites numériques",
-    hours: 36,
-    semester: 1,
-    level: 1,
-    category: "math",
-    filename: "MTIN_121_Analyse_mathematique.md",
-  },
-  {
-    code: "MTIN-122",
-    title: "Algèbre Linéaire",
-    description:
-      "Espaces vectoriels, matrices, déterminants, systèmes d'équations linéaires, applications linéaires",
-    hours: 36,
-    semester: 1,
-    level: 1,
-    category: "math",
-    filename: "MTIN_122_Algebre_lineaire.md",
-  },
-  {
-    code: "MTIN-131",
-    title: "Introduction à l'Informatique",
-    description:
-      "Architecture d'un ordinateur, systèmes d'exploitation, réseaux informatiques, structures de données",
-    hours: 36,
-    semester: 1,
-    level: 1,
-    category: "cs",
-    filename: "MTIN_131_Informatique.md",
-  },
-  {
-    code: "MTIN-132",
-    title: "Introduction à l'Algorithmique",
-    description:
-      "Algorithmique et programmation, variables, structures de contrôle, tableaux, sous-programmes",
-    hours: 36,
-    semester: 1,
-    level: 1,
-    category: "cs",
-    filename: "MTIN_132.md",
-  },
-  {
-    code: "MTIN-141",
-    title: "Électricité",
-    description:
-      "Circuits électriques en régime continu et alternatif, traitement de signal, séries de Fourier",
-    hours: 45,
-    semester: 1,
-    level: 1,
-    category: "electronics",
-    filename: "Cours_Electricite_MTIN_2025_2026.md",
-  },
-  {
-    code: "MTIN-142",
-    title: "Circuits Logiques et Électronique Numérique",
-    description:
-      "Systèmes de numération, algèbre de Boole, fonctions logiques, logique combinatoire et séquentielle",
-    hours: 36,
-    semester: 1,
-    level: 1,
-    category: "electronics",
-    filename: "MTIN_142_Circuit_logique.md",
-  },
-  {
-    code: "MTI-113-FR",
-    title: "Expression Écrite et Orale (Français)",
-    description:
-      "Prise de notes, résumé de texte, argumentation, figures de style, communication",
-    hours: 36,
-    semester: 1,
-    level: 1,
-    category: "language",
-    filename: "MTI_113_Francais.md",
-  },
-  {
-    code: "MTIN-113-EOE",
-    title: "Économie et Organisation des Entreprises",
-    description:
-      "Notion d'entreprise, types d'entreprises, organisation, gestion, environnement économique",
-    hours: 36,
-    semester: 1,
-    level: 1,
-    category: "business",
-    filename: "MTIN_113_EOE.md",
-  },
-  {
-    code: "MTIN-114",
-    title: "Droit / Aspects Juridiques des TIC",
-    description:
-      "Règle de droit, sources du droit, contrats, droit du travail, aspects juridiques des technologies",
-    hours: 36,
-    semester: 1,
-    level: 1,
-    category: "law",
-    filename: "MTIN_114_Droit.md",
-  },
-];
+// ── Helpers ──────────────────────────────────────────────────────
+
+function readJson<T>(filePath: string): T {
+  const raw = fs.readFileSync(filePath, "utf-8");
+  return JSON.parse(raw) as T;
+}
+
+/**
+ * Parse YAML-like frontmatter between --- delimiters.
+ * Handles simple key: value pairs including quoted strings.
+ */
+function parseFrontmatter(content: string): { meta: Record<string, string>; body: string } {
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  if (!match) return { meta: {}, body: content };
+
+  const meta: Record<string, string> = {};
+  const lines = match[1].split(/\r?\n/);
+  for (const line of lines) {
+    const kv = line.match(/^(\w+)\s*:\s*(.+)$/);
+    if (kv) {
+      let val = kv[2].trim();
+      // Strip surrounding quotes
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1);
+      }
+      meta[kv[1]] = val;
+    }
+  }
+
+  const bodyStart = content.indexOf("---", match.index! + 3);
+  const body = bodyStart >= 0 ? content.substring(bodyStart + 3).trimStart() : content;
+
+  return { meta, body };
+}
+
+function getSubdirectories(dir: string): string[] {
+  if (!fs.existsSync(dir)) return [];
+  return fs
+    .readdirSync(dir, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name);
+}
+
+function getMarkdownFiles(dir: string): string[] {
+  if (!fs.existsSync(dir)) return [];
+  return fs
+    .readdirSync(dir, { withFileTypes: true })
+    .filter((f) => f.isFile() && f.name.endsWith(".md"))
+    .map((f) => f.name);
+}
+
+// ── Main seed ────────────────────────────────────────────────────
 
 async function main() {
-  console.log("🌱 Seeding database...\n");
+  const coursesDir = process.env.COURSES_DIR
+    ? path.resolve(process.env.COURSES_DIR)
+    : path.resolve(__dirname, "course-materials");
 
-  // ============ 1. Create School ============
-  const school = await prisma.school.upsert({
-    where: { shortName: "UIT Douala" },
-    update: {},
-    create: {
-      name: "Institut Universitaire de Technologie de Douala",
-      shortName: "UIT Douala",
-      city: "Douala",
-      country: "Cameroun",
-      description:
-        "L'IUT de Douala est un établissement d'enseignement supérieur technologique au Cameroun.",
-    },
-  });
-  console.log(`🏫 School: ${school.shortName} (${school.id})`);
+  console.log("🌱 Seeding database...");
+  console.log(`📁 Course materials root: ${coursesDir}\n`);
 
-  // ============ 2. Create Department ============
-  const department = await prisma.department.upsert({
-    where: { schoolId_code: { schoolId: school.id, code: "GI" } },
-    update: {},
-    create: {
-      schoolId: school.id,
-      name: "Génie Informatique",
-      code: "GI",
-      description:
-        "Département de Génie Informatique - Formation en développement logiciel, réseaux et systèmes.",
-    },
-  });
-  console.log(`📂 Department: ${department.code} - ${department.name}`);
+  if (!fs.existsSync(coursesDir)) {
+    console.error(`❌ Course materials directory not found: ${coursesDir}`);
+    process.exit(1);
+  }
 
-  // ============ 3. Create Academic Class ============
-  const academicClass = await prisma.academicClass.upsert({
-    where: {
-      departmentId_code_academicYear: {
-        departmentId: department.id,
-        code: "L1",
-        academicYear: "2025/2026",
-      },
-    },
-    update: {},
-    create: {
-      departmentId: department.id,
-      name: "Licence 1",
-      code: "L1",
-      academicYear: "2025/2026",
-      description: "Première année de la licence en Génie Informatique",
-    },
-  });
-  console.log(
-    `🎓 Class: ${academicClass.name} (${academicClass.code}) - ${academicClass.academicYear}`
-  );
-
-  // ============ 4. Create Demo Users ============
-  const hashedPassword = await bcrypt.hash("student123", 10);
-  const student = await prisma.user.upsert({
-    where: { email: "etudiant@uit.cm" },
-    update: {
-      schoolId: school.id,
-      departmentId: department.id,
-      classId: academicClass.id,
-      language: "fr",
-    },
-    create: {
-      name: "Étudiant Demo",
-      email: "etudiant@uit.cm",
-      password: hashedPassword,
-      role: "student",
-      language: "fr",
-      schoolId: school.id,
-      departmentId: department.id,
-      classId: academicClass.id,
-    },
-  });
-  console.log(`👤 Student: ${student.email}`);
-
+  // ── 1. Create default admin (school-independent) ──
   const adminPassword = await bcrypt.hash("admin123", 10);
   const admin = await prisma.user.upsert({
     where: { email: "admin@lionai.com" },
@@ -207,78 +117,219 @@ async function main() {
       language: "fr",
     },
   });
-  console.log(`👤 Admin: ${admin.email}`);
+  console.log(`👤 Admin: ${admin.email}\n`);
 
-  // ============ 5. Seed Courses (linked to class) ============
-  // Use COURSES_DIR env var, or fall back to local path
-  const coursesDir = process.env.COURSES_DIR
-    ? path.resolve(process.env.COURSES_DIR)
-    : path.resolve(__dirname, "../uit/gi/2025");
-  console.log(`\n📚 Loading courses from: ${coursesDir}\n`);
+  // ── 2. Walk school directories ──
+  const schoolDirs = getSubdirectories(coursesDir);
+  if (schoolDirs.length === 0) {
+    console.warn("⚠️  No school directories found. Nothing to seed.");
+    return;
+  }
 
-  for (const courseDef of COURSES) {
-    const filePath = path.join(coursesDir, courseDef.filename);
-    let content = "";
+  let totalCourses = 0;
 
-    try {
-      content = fs.readFileSync(filePath, "utf-8");
-      console.log(`  📄 Loaded: ${courseDef.filename}`);
-    } catch {
-      console.warn(
-        `  ⚠️  File not found: ${courseDef.filename}, using placeholder`
-      );
-      content = `# ${courseDef.title}\n\n${courseDef.description}`;
+  for (const schoolFolder of schoolDirs) {
+    const schoolPath = path.join(coursesDir, schoolFolder);
+    const schoolJsonPath = path.join(schoolPath, "school.json");
+
+    if (!fs.existsSync(schoolJsonPath)) {
+      console.warn(`⚠️  Skipping ${schoolFolder}: no school.json found`);
+      continue;
     }
 
-    const course = await prisma.course.upsert({
-      where: { code: courseDef.code },
+    const schoolMeta = readJson<SchoolMeta>(schoolJsonPath);
+
+    // Create/update school
+    const school = await prisma.school.upsert({
+      where: { shortName: schoolMeta.shortName },
       update: {
-        title: courseDef.title,
-        description: courseDef.description,
-        hours: courseDef.hours,
-        semester: courseDef.semester,
-        level: courseDef.level,
-        content: content,
-        category: courseDef.category,
-        classId: academicClass.id,
+        name: schoolMeta.name,
+        city: schoolMeta.city,
+        country: schoolMeta.country || "Cameroun",
+        description: schoolMeta.description || null,
       },
       create: {
-        code: courseDef.code,
-        title: courseDef.title,
-        description: courseDef.description,
-        hours: courseDef.hours,
-        semester: courseDef.semester,
-        level: courseDef.level,
-        content: content,
-        category: courseDef.category,
-        classId: academicClass.id,
+        name: schoolMeta.name,
+        shortName: schoolMeta.shortName,
+        city: schoolMeta.city,
+        country: schoolMeta.country || "Cameroun",
+        description: schoolMeta.description || null,
       },
     });
+    console.log(`🏫 School: ${school.shortName} (${school.id})`);
 
-    // Auto-enroll demo student
-    await prisma.enrollment.upsert({
-      where: {
-        userId_courseId: {
-          userId: student.id,
-          courseId: course.id,
+    // ── 3. Walk department directories ──
+    const deptDirs = getSubdirectories(schoolPath);
+
+    for (const deptFolder of deptDirs) {
+      const deptPath = path.join(schoolPath, deptFolder);
+      const deptJsonPath = path.join(deptPath, "department.json");
+
+      if (!fs.existsSync(deptJsonPath)) {
+        continue; // skip non-department folders
+      }
+
+      const deptMeta = readJson<DepartmentMeta>(deptJsonPath);
+
+      // Create/update department
+      const department = await prisma.department.upsert({
+        where: { schoolId_code: { schoolId: school.id, code: deptMeta.code } },
+        update: {
+          name: deptMeta.name,
+          description: deptMeta.description || null,
         },
+        create: {
+          schoolId: school.id,
+          name: deptMeta.name,
+          code: deptMeta.code,
+          description: deptMeta.description || null,
+        },
+      });
+      console.log(`  📂 Department: ${department.code} — ${department.name}`);
+
+      // ── 4. Walk class directories ──
+      const classDirs = getSubdirectories(deptPath);
+
+      for (const classFolder of classDirs) {
+        const classPath = path.join(deptPath, classFolder);
+        const classJsonPath = path.join(classPath, "class.json");
+
+        if (!fs.existsSync(classJsonPath)) {
+          continue; // skip non-class folders
+        }
+
+        const classMeta = readJson<ClassMeta>(classJsonPath);
+
+        // Create/update class
+        const academicClass = await prisma.academicClass.upsert({
+          where: {
+            departmentId_code_academicYear: {
+              departmentId: department.id,
+              code: classMeta.code,
+              academicYear: classMeta.academicYear,
+            },
+          },
+          update: {
+            name: classMeta.name,
+            description: classMeta.description || null,
+          },
+          create: {
+            departmentId: department.id,
+            name: classMeta.name,
+            code: classMeta.code,
+            academicYear: classMeta.academicYear,
+            description: classMeta.description || null,
+          },
+        });
+        console.log(`    🎓 Class: ${academicClass.name} (${academicClass.code}) — ${academicClass.academicYear}`);
+
+        // ── 5. Read course .md files with frontmatter ──
+        const mdFiles = getMarkdownFiles(classPath);
+        let classCoursesCount = 0;
+
+        for (const mdFile of mdFiles) {
+          const filePath = path.join(classPath, mdFile);
+          const raw = fs.readFileSync(filePath, "utf-8");
+          const { meta, body } = parseFrontmatter(raw);
+
+          if (!meta.code || !meta.title) {
+            console.warn(`      ⚠️  Skipping ${mdFile}: missing 'code' or 'title' in frontmatter`);
+            continue;
+          }
+
+          const courseDef: CourseFrontmatter = {
+            code: meta.code,
+            title: meta.title,
+            description: meta.description || meta.title,
+            hours: meta.hours ? parseInt(meta.hours, 10) : 36,
+            semester: meta.semester ? parseInt(meta.semester, 10) : 1,
+            level: meta.level ? parseInt(meta.level, 10) : 1,
+            category: meta.category || "general",
+          };
+
+          const content = body || `# ${courseDef.title}\n\n${courseDef.description}`;
+
+          await prisma.course.upsert({
+            where: { code: courseDef.code },
+            update: {
+              title: courseDef.title,
+              description: courseDef.description,
+              hours: courseDef.hours!,
+              semester: courseDef.semester!,
+              level: courseDef.level!,
+              content: content,
+              category: courseDef.category!,
+              classId: academicClass.id,
+            },
+            create: {
+              code: courseDef.code,
+              title: courseDef.title,
+              description: courseDef.description,
+              hours: courseDef.hours!,
+              semester: courseDef.semester!,
+              level: courseDef.level!,
+              content: content,
+              category: courseDef.category!,
+              classId: academicClass.id,
+            },
+          });
+
+          console.log(`      ✅ ${courseDef.code} — ${courseDef.title} (${mdFile})`);
+          classCoursesCount++;
+        }
+
+        totalCourses += classCoursesCount;
+        console.log(`    📚 ${classCoursesCount} course(s) in ${academicClass.name}\n`);
+      }
+    }
+  }
+
+  // ── 6. Create demo student (linked to first school/dept/class found) ──
+  const firstSchool = await prisma.school.findFirst({ include: { departments: { include: { classes: true } } } });
+  if (firstSchool) {
+    const firstDept = firstSchool.departments[0];
+    const firstClass = firstDept?.classes[0];
+
+    const hashedPassword = await bcrypt.hash("student123", 10);
+    const student = await prisma.user.upsert({
+      where: { email: "etudiant@uit.cm" },
+      update: {
+        schoolId: firstSchool.id,
+        departmentId: firstDept?.id || null,
+        classId: firstClass?.id || null,
       },
-      update: {},
       create: {
-        userId: student.id,
-        courseId: course.id,
+        name: "Étudiant Demo",
+        email: "etudiant@uit.cm",
+        password: hashedPassword,
+        role: "student",
+        language: "fr",
+        schoolId: firstSchool.id,
+        departmentId: firstDept?.id || null,
+        classId: firstClass?.id || null,
       },
     });
+    console.log(`👤 Demo student: ${student.email}`);
 
-    console.log(`  ✅ ${courseDef.code} - ${courseDef.title}`);
+    // Auto-enroll demo student in all courses of their class
+    if (firstClass) {
+      const courses = await prisma.course.findMany({ where: { classId: firstClass.id } });
+      for (const course of courses) {
+        await prisma.enrollment.upsert({
+          where: { userId_courseId: { userId: student.id, courseId: course.id } },
+          update: {},
+          create: { userId: student.id, courseId: course.id },
+        });
+      }
+      console.log(`📝 Enrolled in ${courses.length} course(s)`);
+    }
   }
 
   console.log("\n🎉 Database seeded successfully!");
+  console.log(`📊 Total: ${totalCourses} course(s) across ${schoolDirs.length} school(s)`);
   console.log("\n📋 Demo Accounts:");
   console.log("   Student: etudiant@uit.cm / student123");
   console.log("   Admin:   admin@lionai.com / admin123");
-  console.log(`\n🏫 Hierarchy: ${school.shortName} → ${department.code} → ${academicClass.name} (${academicClass.academicYear})`);
-  console.log(`📚 ${COURSES.length} courses linked to ${academicClass.name}`);
 }
 
 main()

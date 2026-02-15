@@ -1,3 +1,13 @@
+---
+code: MTIN-113-EOE
+title: Économie et Organisation des Entreprises
+description: Notion d'entreprise, types d'entreprises, organisation, gestion, environnement économique
+hours: 36
+semester: 1
+level: 1
+category: business
+---
+
 # MTIN 113 EOE
 
 

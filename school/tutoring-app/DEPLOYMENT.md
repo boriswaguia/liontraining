@@ -66,7 +66,10 @@ This will:
 docker compose exec app node seed.js
 ```
 
-> The seed creates demo accounts and loads course materials from `/app/course-materials/`.
+> The seed auto-discovers the `course-materials/` hierarchy:
+> `School/ → Department/ → Class/ → course.md` files with YAML frontmatter.
+> See [`course-materials/README.md`](course-materials/README.md) for the full structure.
+> To add a new school, department, or class, just create the folders with their JSON metadata and re-run the seed.
 
 ### 1.5 Verify
 

@@ -1,3 +1,13 @@
+---
+code: MTIN-121
+title: Analyse Mathématique
+description: Nombres complexes, équations, forme trigonométrique et exponentielle, formule de Moivre, séries et suites numériques
+hours: 36
+semester: 1
+level: 1
+category: math
+---
+
 # MTIN 121 Analyse mathématique
 
 

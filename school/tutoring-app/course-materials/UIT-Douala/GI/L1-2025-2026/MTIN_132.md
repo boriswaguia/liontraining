@@ -1,3 +1,13 @@
+---
+code: MTIN-132
+title: Introduction à l'Algorithmique
+description: Algorithmique et programmation, variables, structures de contrôle, tableaux, sous-programmes
+hours: 36
+semester: 1
+level: 1
+category: cs
+---
+
 # MTIN_132
 
 

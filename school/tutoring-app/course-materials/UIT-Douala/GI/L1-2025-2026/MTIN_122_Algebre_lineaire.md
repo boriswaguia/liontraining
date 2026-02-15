@@ -1,4 +1,14 @@
-# MTIN 122 Algèbre_lineaire
+---
+code: MTIN-122
+title: "Algèbre Linéaire"
+description: "Espaces vectoriels, matrices, déterminants, systèmes d'équations linéaires, applications linéaires"
+hours: 36
+semester: 1
+level: 1
+category: math
+---
+
+# MTIN 122 Algèbre_lineaire
 
 
 ---

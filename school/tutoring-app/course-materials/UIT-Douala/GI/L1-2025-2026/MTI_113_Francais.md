@@ -1,3 +1,13 @@
+---
+code: MTI-113-FR
+title: Expression Écrite et Orale (Français)
+description: Prise de notes, résumé de texte, argumentation, figures de style, communication
+hours: 36
+semester: 1
+level: 1
+category: language
+---
+
 # MTI 113 Francais
 
 

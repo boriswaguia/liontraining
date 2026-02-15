@@ -1,3 +1,13 @@
+---
+code: MTIN-142
+title: Circuits Logiques et Électronique Numérique
+description: Systèmes de numération, algèbre de Boole, fonctions logiques, logique combinatoire et séquentielle
+hours: 36
+semester: 1
+level: 1
+category: electronics
+---
+
 # MTIN 142_Circuit logique et éléments d'électronique numerique
 
 

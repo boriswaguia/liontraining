@@ -1,3 +1,13 @@
+---
+code: MTIN-131
+title: Introduction à l'Informatique
+description: Architecture d'un ordinateur, systèmes d'exploitation, réseaux informatiques, structures de données
+hours: 36
+semester: 1
+level: 1
+category: cs
+---
+
 # MTIN_131 (2)
 
 
