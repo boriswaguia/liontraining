@@ -15,6 +15,14 @@ export const FREE_LIMITS = {
   chatMessages: 15,
 };
 
+// ============= SUBSCRIPTION PLANS =============
+export const SUBSCRIPTION_PLANS = {
+  monthly: { name: "Mensuel", nameEn: "Monthly", priceCFA: 5000, durationDays: 30 },
+  annual: { name: "Annuel", nameEn: "Annual", priceCFA: 40000, durationDays: 365 },
+} as const;
+
+export type SubscriptionPlan = keyof typeof SUBSCRIPTION_PLANS;
+
 // Which actions count as "generations" vs "chat"
 const GENERATION_ACTIONS = ["exercise", "study_guide", "flashcards", "study_plan"];
 const CHAT_ACTIONS = ["chat"];
@@ -53,7 +61,7 @@ export async function checkAndConsumeQuota(
 ): Promise<QuotaResult> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { role: true, creditBalance: true, plan: true },
+    select: { role: true, creditBalance: true, plan: true, subscriptionPlan: true, subscriptionExpiresAt: true },
   });
 
   if (!user) {
@@ -62,6 +70,11 @@ export async function checkAndConsumeQuota(
 
   // Admins bypass all quotas
   if (user.role === "admin") {
+    return { allowed: true };
+  }
+
+  // Active subscribers bypass quotas
+  if (user.subscriptionPlan && user.subscriptionExpiresAt && user.subscriptionExpiresAt > new Date()) {
     return { allowed: true };
   }
 
@@ -155,7 +168,7 @@ export async function checkAndConsumeQuota(
 export async function getQuotaStatus(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { creditBalance: true, plan: true, role: true },
+    select: { creditBalance: true, plan: true, role: true, subscriptionPlan: true, subscriptionExpiresAt: true },
   });
 
   if (!user) return null;
@@ -165,10 +178,15 @@ export async function getQuotaStatus(userId: string) {
     where: { userId_date: { userId, date: today } },
   });
 
+  const hasActiveSubscription = !!(user.subscriptionPlan && user.subscriptionExpiresAt && user.subscriptionExpiresAt > new Date());
+
   return {
     creditBalance: user.creditBalance,
     plan: user.plan,
     role: user.role,
+    subscriptionPlan: user.subscriptionPlan,
+    subscriptionExpiresAt: user.subscriptionExpiresAt?.toISOString() || null,
+    hasActiveSubscription,
     today: {
       generations: quota?.generations || 0,
       chatMessages: quota?.chatMessages || 0,
@@ -212,4 +230,39 @@ export async function addCredits(
   ]);
 
   return updatedUser;
+}
+
+/**
+ * Activate a subscription for a user.
+ */
+export async function activateSubscription(
+  userId: string,
+  plan: SubscriptionPlan
+) {
+  const planDetails = SUBSCRIPTION_PLANS[plan];
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + planDetails.durationDays);
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      subscriptionPlan: plan,
+      subscriptionExpiresAt: expiresAt,
+    },
+  });
+
+  return updatedUser;
+}
+
+/**
+ * Cancel a subscription (remove plan, keep expiration so it runs out naturally).
+ */
+export async function cancelSubscription(userId: string) {
+  return prisma.user.update({
+    where: { id: userId },
+    data: {
+      subscriptionPlan: null,
+      subscriptionExpiresAt: null,
+    },
+  });
 }

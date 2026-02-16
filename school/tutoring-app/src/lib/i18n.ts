@@ -681,6 +681,68 @@ const translations = {
   "credits.needed": { fr: "nécessaires", en: "needed" },
   "credits.buyCredits": { fr: "Acheter des crédits", en: "Buy credits" },
 
+  // ============= SUBSCRIPTIONS =============
+  "credits.subscriber": { fr: "Abonné Premium", en: "Premium Subscriber" },
+  "credits.tab.subscription": { fr: "Abonnement", en: "Subscription" },
+  "credits.sub.active": { fr: "Abonnement actif", en: "Active Subscription" },
+  "credits.sub.monthly": { fr: "Mensuel", en: "Monthly" },
+  "credits.sub.annual": { fr: "Annuel", en: "Annual" },
+  "credits.sub.month": { fr: "mois", en: "month" },
+  "credits.sub.year": { fr: "an", en: "year" },
+  "credits.sub.expiresOn": { fr: "Expire le", en: "Expires on" },
+  "credits.sub.daysLeft": { fr: "Jours restants", en: "Days remaining" },
+  "credits.sub.unlimitedAccess": {
+    fr: "Accès illimité à toutes les fonctionnalités IA",
+    en: "Unlimited access to all AI features",
+  },
+  "credits.sub.title": {
+    fr: "Passez à l'illimité",
+    en: "Go Unlimited",
+  },
+  "credits.sub.desc": {
+    fr: "Abonnez-vous pour un accès illimité à toutes les fonctionnalités IA, sans quotas ni crédits.",
+    en: "Subscribe for unlimited access to all AI features, no quotas or credits needed.",
+  },
+  "credits.sub.subscribe": { fr: "S'abonner", en: "Subscribe" },
+  "credits.sub.bestValue": { fr: "Meilleur rapport", en: "Best value" },
+  "credits.sub.save33": {
+    fr: "Économisez 33% vs mensuel",
+    en: "Save 33% vs monthly",
+  },
+  "credits.sub.feat.unlimited": {
+    fr: "Générations IA illimitées",
+    en: "Unlimited AI generations",
+  },
+  "credits.sub.feat.allFeatures": {
+    fr: "Chat, exercices, flashcards, guides, plans",
+    en: "Chat, exercises, flashcards, guides, plans",
+  },
+  "credits.sub.feat.noLimits": {
+    fr: "Aucun quota quotidien",
+    en: "No daily quotas",
+  },
+  "credits.sub.feat.bestPrice": {
+    fr: "Meilleur prix par mois",
+    en: "Best price per month",
+  },
+  "credits.sub.upsell": {
+    fr: "Passez Premium !",
+    en: "Go Premium!",
+  },
+  "credits.sub.upsellDesc": {
+    fr: "Abonnez-vous pour un accès illimité — plus jamais de quotas épuisés.",
+    en: "Subscribe for unlimited access — never run out of quotas again.",
+  },
+  "credits.sub.seeSubscriptions": {
+    fr: "Voir les abonnements",
+    en: "See subscriptions",
+  },
+  "credits.sub.contactInfo": {
+    fr: "Pour souscrire, contactez l'administration de votre école.",
+    en: "To subscribe, contact your school's administration.",
+  },
+  "credits.bonusCredits": { fr: "Crédits bonus", en: "Bonus credits" },
+
   // ============= ADMIN CREDIT PACKS =============
   "admin.creditPacks.title": { fr: "Packs de Crédits", en: "Credit Packs" },
   "admin.creditPacks.subtitle": {

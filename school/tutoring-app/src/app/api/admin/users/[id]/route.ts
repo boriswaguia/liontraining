@@ -23,6 +23,8 @@ export async function GET(
       isActive: true,
       creditBalance: true,
       plan: true,
+      subscriptionPlan: true,
+      subscriptionExpiresAt: true,
       schoolId: true,
       departmentId: true,
       classId: true,

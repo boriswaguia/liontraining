@@ -1,6 +1,6 @@
 "use client";
 
-import { Coins, AlertTriangle, ShoppingBag, X } from "lucide-react";
+import { Coins, AlertTriangle, ShoppingBag, Crown, X } from "lucide-react";
 import Link from "next/link";
 import { Language, t } from "@/lib/i18n";
 
@@ -55,24 +55,42 @@ export default function QuotaExceededModal({
           </div>
         )}
 
-        <p className="text-sm text-gray-600 mb-6">
+        <p className="text-sm text-gray-600 mb-4">
           {t("credits.resetInfo", lang)}
         </p>
 
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-2.5 border rounded-lg hover:bg-gray-50 font-medium text-sm"
-          >
-            {t("close", lang)}
-          </button>
+        {/* Subscription upsell */}
+        <div className="bg-indigo-50 rounded-lg p-3 mb-4 border border-indigo-100">
+          <div className="flex items-center gap-2 mb-1">
+            <Crown className="w-4 h-4 text-indigo-600" />
+            <span className="text-sm font-semibold text-indigo-900">{t("credits.sub.upsell", lang)}</span>
+          </div>
+          <p className="text-xs text-indigo-700">{t("credits.sub.upsellDesc", lang)}</p>
+        </div>
+
+        <div className="flex flex-col gap-2">
           <Link
-            href="/credits"
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-medium text-sm"
+            href="/credits?tab=subscription"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium text-sm"
           >
-            <ShoppingBag className="w-4 h-4" />
-            {t("credits.buyCredits", lang)}
+            <Crown className="w-4 h-4" />
+            {t("credits.sub.seeSubscriptions", lang)}
           </Link>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="flex-1 px-4 py-2.5 border rounded-lg hover:bg-gray-50 font-medium text-sm"
+            >
+              {t("close", lang)}
+            </button>
+            <Link
+              href="/credits"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-medium text-sm"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              {t("credits.buyCredits", lang)}
+            </Link>
+          </div>
         </div>
       </div>
     </div>

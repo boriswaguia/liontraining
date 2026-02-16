@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getQuotaStatus, CREDIT_COSTS, FREE_LIMITS } from "@/lib/credits";
+import { getQuotaStatus, CREDIT_COSTS, FREE_LIMITS, SUBSCRIPTION_PLANS } from "@/lib/credits";
 
 /**
  * GET /api/credits — Get current user's credit balance, quota status, packs, and history
@@ -16,6 +16,7 @@ export async function GET(req: NextRequest) {
 
   // Basic quota status (always returned)
   const quotaStatus = await getQuotaStatus(session.user.id);
+  const base = { quotaStatus, creditCosts: CREDIT_COSTS, freeLimits: FREE_LIMITS, subscriptionPlans: SUBSCRIPTION_PLANS };
 
   if (tab === "history") {
     const transactions = await prisma.creditTransaction.findMany({
@@ -23,7 +24,7 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
       take: 50,
     });
-    return NextResponse.json({ quotaStatus, transactions, creditCosts: CREDIT_COSTS, freeLimits: FREE_LIMITS });
+    return NextResponse.json({ ...base, transactions });
   }
 
   if (tab === "packs") {
@@ -31,9 +32,9 @@ export async function GET(req: NextRequest) {
       where: { isActive: true },
       orderBy: { sortOrder: "asc" },
     });
-    return NextResponse.json({ quotaStatus, packs, creditCosts: CREDIT_COSTS, freeLimits: FREE_LIMITS });
+    return NextResponse.json({ ...base, packs });
   }
 
-  // Default: just quota status + costs
-  return NextResponse.json({ quotaStatus, creditCosts: CREDIT_COSTS, freeLimits: FREE_LIMITS });
+  // Default: just quota status + costs + plans
+  return NextResponse.json(base);
 }

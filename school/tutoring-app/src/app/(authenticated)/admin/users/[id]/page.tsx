@@ -39,6 +39,8 @@ interface UserDetail {
   isActive: boolean;
   creditBalance: number;
   plan: string;
+  subscriptionPlan: string | null;
+  subscriptionExpiresAt: string | null;
   schoolId: string | null;
   departmentId: string | null;
   classId: string | null;
@@ -186,6 +188,7 @@ export default function AdminUserDetailPage({
   const [creditAmount, setCreditAmount] = useState("");
   const [creditDesc, setCreditDesc] = useState("");
   const [grantingCredits, setGrantingCredits] = useState(false);
+  const [activatingSub, setActivatingSub] = useState(false);
 
   useEffect(() => {
     async function fetchUser() {
@@ -815,6 +818,109 @@ export default function AdminUserDetailPage({
         {/* Credits Tab */}
         {activeTab === "credits" && (
           <div className="space-y-6">
+            {/* Subscription card */}
+            <div className="bg-white rounded-xl border shadow-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-indigo-500" />
+                  Abonnement
+                </h3>
+                {user.subscriptionPlan && user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date() ? (
+                  <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">Actif</span>
+                ) : (
+                  <span className="px-3 py-1 bg-gray-100 text-gray-500 rounded-full text-sm font-medium">Aucun</span>
+                )}
+              </div>
+              {user.subscriptionPlan && user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date() ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500">Plan</span>
+                    <span className="font-medium">{user.subscriptionPlan === "monthly" ? "Mensuel (5 000 FCFA/mois)" : "Annuel (40 000 FCFA/an)"}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500">Expire le</span>
+                    <span className="font-medium">{new Date(user.subscriptionExpiresAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500">Jours restants</span>
+                    <span className="font-medium">{Math.max(0, Math.ceil((new Date(user.subscriptionExpiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))}</span>
+                  </div>
+                  <button
+                    disabled={activatingSub}
+                    onClick={async () => {
+                      setActivatingSub(true);
+                      try {
+                        const res = await fetch(`/api/admin/subscriptions?userId=${user.id}`, { method: "DELETE" });
+                        if (res.ok) {
+                          setUser({ ...user, subscriptionPlan: null, subscriptionExpiresAt: null });
+                        }
+                      } finally {
+                        setActivatingSub(false);
+                      }
+                    }}
+                    className="w-full mt-2 px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 text-sm font-medium"
+                  >
+                    Annuler l'abonnement
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-500 mb-3">Activer un abonnement illimité pour cet étudiant :</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      disabled={activatingSub}
+                      onClick={async () => {
+                        setActivatingSub(true);
+                        try {
+                          const res = await fetch("/api/admin/subscriptions", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ userId: user.id, plan: "monthly" }),
+                          });
+                          if (res.ok) {
+                            const data = await res.json();
+                            setUser({ ...user, subscriptionPlan: data.subscriptionPlan, subscriptionExpiresAt: data.subscriptionExpiresAt });
+                          }
+                        } finally {
+                          setActivatingSub(false);
+                        }
+                      }}
+                      className="p-4 border-2 border-indigo-200 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 transition"
+                    >
+                      <p className="font-bold text-gray-900">Mensuel</p>
+                      <p className="text-xl font-bold text-indigo-600 mt-1">5 000 <span className="text-sm font-normal">FCFA</span></p>
+                      <p className="text-xs text-gray-400 mt-1">30 jours illimité</p>
+                    </button>
+                    <button
+                      disabled={activatingSub}
+                      onClick={async () => {
+                        setActivatingSub(true);
+                        try {
+                          const res = await fetch("/api/admin/subscriptions", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ userId: user.id, plan: "annual" }),
+                          });
+                          if (res.ok) {
+                            const data = await res.json();
+                            setUser({ ...user, subscriptionPlan: data.subscriptionPlan, subscriptionExpiresAt: data.subscriptionExpiresAt });
+                          }
+                        } finally {
+                          setActivatingSub(false);
+                        }
+                      }}
+                      className="p-4 border-2 border-amber-200 rounded-xl hover:border-amber-500 hover:bg-amber-50 transition"
+                    >
+                      <p className="font-bold text-gray-900">Annuel</p>
+                      <p className="text-xl font-bold text-amber-600 mt-1">40 000 <span className="text-sm font-normal">FCFA</span></p>
+                      <p className="text-xs text-gray-400 mt-1">365 jours illimité</p>
+                      <p className="text-xs text-green-600 font-medium">Économie de 33%</p>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Balance card */}
             <div className="bg-white rounded-xl border shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
