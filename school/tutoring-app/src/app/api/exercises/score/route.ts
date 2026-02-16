@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { updateAfterExerciseScore } from "@/lib/progress";
+import { logActivity, Actions } from "@/lib/activity";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -46,6 +47,16 @@ export async function POST(req: NextRequest) {
       score,
       exercise.difficulty
     );
+
+    logActivity({
+      userId: session.user.id,
+      action: Actions.EXERCISE_SCORE,
+      category: "learning",
+      resource: "exercise",
+      resourceId: exerciseId,
+      detail: { score, courseId: exercise.courseId, topic: exercise.topic, xpEarned: result.xpEarned },
+      req,
+    });
 
     return NextResponse.json({
       success: true,

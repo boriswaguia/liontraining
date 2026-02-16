@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
+import { logActivity, Actions } from "@/lib/activity";
 
 export async function POST(req: NextRequest) {
   try {
@@ -96,6 +97,17 @@ export async function POST(req: NextRequest) {
         });
       }
     }
+
+    // Log registration activity
+    logActivity({
+      userId: user.id,
+      action: Actions.REGISTER,
+      category: "auth",
+      resource: "user",
+      resourceId: user.id,
+      detail: { name: user.name, email: user.email, enrolledCourses: courses.length },
+      req,
+    });
 
     return NextResponse.json(
       {

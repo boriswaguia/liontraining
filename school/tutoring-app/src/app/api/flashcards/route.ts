@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { generateFlashcards } from "@/lib/gemini";
 import { buildStudentProfileForLLM, recordActivity } from "@/lib/progress";
+import { logActivity, Actions } from "@/lib/activity";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -47,6 +48,16 @@ export async function POST(req: NextRequest) {
 
     // Record activity for progress tracking
     await recordActivity(session.user.id, courseId, "flashcard");
+
+    logActivity({
+      userId: session.user.id,
+      action: Actions.FLASHCARD_GENERATE,
+      category: "ai",
+      resource: "flashcard_deck",
+      resourceId: deck.id,
+      detail: { courseId, topic: topic || null, count },
+      req,
+    });
 
     return NextResponse.json({ deck, cards }, { status: 201 });
   } catch (error) {
@@ -101,6 +112,16 @@ export async function PATCH(req: NextRequest) {
         reviewed: reviewed ?? true,
         confidence: confidence ?? undefined,
       },
+    });
+
+    logActivity({
+      userId: session.user.id,
+      action: Actions.FLASHCARD_REVIEW,
+      category: "learning",
+      resource: "flashcard_deck",
+      resourceId: deckId,
+      detail: { reviewed, confidence },
+      req,
     });
 
     return NextResponse.json({ success: true });

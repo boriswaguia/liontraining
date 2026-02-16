@@ -161,6 +161,15 @@ const translations = {
   "nav.admin.classes": { fr: "Classes", en: "Classes" },
   "nav.admin.courses": { fr: "Cours", en: "Courses" },
   "nav.admin.users": { fr: "Utilisateurs", en: "Users" },
+  "nav.admin.activity": { fr: "Journal d'activité", en: "Activity Log" },
+  "admin.activity.title": {
+    fr: "Journal d'activité",
+    en: "Activity Log",
+  },
+  "admin.activity.subtitle": {
+    fr: "Suivez toutes les actions des utilisateurs sur la plateforme",
+    en: "Track all user actions on the platform",
+  },
   "nav.logout": { fr: "Déconnexion", en: "Logout" },
   "nav.subtitle.default": {
     fr: "Plateforme de tutorat",
@@ -669,5 +678,6 @@ export function getAdminNavigation(lang: Language) {
     { name: t("nav.admin.classes", lang), href: "/admin/classes" },
     { name: t("nav.admin.courses", lang), href: "/admin/courses" },
     { name: t("nav.admin.users", lang), href: "/admin/users" },
+    { name: t("nav.admin.activity", lang), href: "/admin/activity" },
   ];
 }

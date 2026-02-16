@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { generateStudyGuide } from "@/lib/gemini";
 import { buildStudentProfileForLLM, recordActivity } from "@/lib/progress";
+import { logActivity, Actions } from "@/lib/activity";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -47,6 +48,16 @@ export async function POST(req: NextRequest) {
 
     // Record activity for progress tracking
     await recordActivity(session.user.id, courseId, "study_guide");
+
+    logActivity({
+      userId: session.user.id,
+      action: Actions.STUDY_GUIDE_GENERATE,
+      category: "ai",
+      resource: "study_guide",
+      resourceId: guide.id,
+      detail: { courseId, chapter: chapter || null, title: guide.title },
+      req,
+    });
 
     return NextResponse.json({ guide }, { status: 201 });
   } catch (error) {
@@ -98,6 +109,16 @@ export async function PATCH(req: NextRequest) {
     await prisma.studyGuide.update({
       where: { id: guideId },
       data: { completed },
+    });
+
+    logActivity({
+      userId: session.user.id,
+      action: Actions.STUDY_GUIDE_COMPLETE,
+      category: "learning",
+      resource: "study_guide",
+      resourceId: guideId,
+      detail: { completed },
+      req,
     });
 
     return NextResponse.json({ success: true });

@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
+import { logActivity, Actions } from "@/lib/activity";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -33,6 +34,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         );
 
         if (!passwordMatch) return null;
+
+        // Check if user account is active
+        if (!user.isActive) return null;
+
+        // Log successful login
+        logActivity({
+          userId: user.id,
+          action: Actions.LOGIN,
+          category: "auth",
+          resource: "session",
+          detail: { role: user.role, email: user.email },
+        });
 
         return {
           id: user.id,

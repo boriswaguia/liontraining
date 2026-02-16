@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { chatWithTutor } from "@/lib/gemini";
 import { buildStudentProfileForLLM, recordActivity } from "@/lib/progress";
+import { logActivity, Actions } from "@/lib/activity";
 
 // ── Input safety guard ──────────────────────────────────────────────
 const MAX_MESSAGE_LENGTH = 4000;
@@ -221,6 +222,16 @@ export async function POST(req: NextRequest) {
 
     // Record activity for progress tracking
     await recordActivity(session.user.id, course.id, "chat");
+
+    logActivity({
+      userId: session.user.id,
+      action: Actions.CHAT_MESSAGE,
+      category: "ai",
+      resource: "chat_session",
+      resourceId: chatSession.id,
+      detail: { courseId: course.id, courseTitle: course.title },
+      req,
+    });
 
     return NextResponse.json({
       sessionId: chatSession.id,

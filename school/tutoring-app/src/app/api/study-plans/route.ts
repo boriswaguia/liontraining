@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { generateStudyPlan } from "@/lib/gemini";
 import { buildStudentProfileForLLM, recordActivity } from "@/lib/progress";
+import { logActivity, Actions } from "@/lib/activity";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -57,6 +58,16 @@ export async function POST(req: NextRequest) {
     // Record activity for progress tracking
     await recordActivity(session.user.id, courseId, "study_plan");
 
+    logActivity({
+      userId: session.user.id,
+      action: Actions.STUDY_PLAN_GENERATE,
+      category: "ai",
+      resource: "study_plan",
+      resourceId: plan.id,
+      detail: { courseId, startDate, endDate, hoursPerDay, tasksCount: result.tasks.length },
+      req,
+    });
+
     return NextResponse.json({ plan }, { status: 201 });
   } catch (error) {
     console.error("Study plan error:", error);
@@ -101,6 +112,16 @@ export async function PATCH(req: NextRequest) {
       completed,
       completedAt: completed ? new Date() : null,
     },
+  });
+
+  logActivity({
+    userId: session.user.id,
+    action: Actions.STUDY_PLAN_TASK_TOGGLE,
+    category: "learning",
+    resource: "study_task",
+    resourceId: taskId,
+    detail: { completed },
+    req,
   });
 
   return NextResponse.json({ task });

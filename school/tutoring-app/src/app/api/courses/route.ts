@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { logActivity, Actions } from "@/lib/activity";
 
 export async function GET() {
   const session = await auth();
@@ -32,6 +33,15 @@ export async function POST(req: NextRequest) {
       userId: session.user.id,
       courseId,
     },
+  });
+
+  logActivity({
+    userId: session.user.id,
+    action: Actions.COURSE_ENROLL,
+    category: "learning",
+    resource: "course",
+    resourceId: courseId,
+    req,
   });
 
   return NextResponse.json({ enrollment }, { status: 201 });

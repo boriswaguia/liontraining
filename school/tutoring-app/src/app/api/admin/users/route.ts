@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin";
 import bcrypt from "bcryptjs";
+import { logActivity, Actions } from "@/lib/activity";
 
 // Allowed fields for PATCH update — prevents arbitrary field injection
 const ALLOWED_UPDATE_FIELDS = new Set([
@@ -120,7 +121,7 @@ export async function GET(req: NextRequest) {
 
 // POST /api/admin/users — create a user
 export async function POST(req: NextRequest) {
-  const { error, status } = await requireAdmin();
+  const { error, status, session } = await requireAdmin();
   if (error) return NextResponse.json({ error }, { status });
 
   const body = await req.json();
@@ -149,6 +150,17 @@ export async function POST(req: NextRequest) {
         classId: classId || null,
       },
     });
+
+    logActivity({
+      userId: session!.user!.id!,
+      action: Actions.ADMIN_USER_CREATE,
+      category: "admin",
+      resource: "user",
+      resourceId: user.id,
+      detail: { name, email, role: role || "student" },
+      req,
+    });
+
     return NextResponse.json({ user: { ...user, password: undefined } }, { status: 201 });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Erreur";
@@ -161,7 +173,7 @@ export async function POST(req: NextRequest) {
 
 // PATCH /api/admin/users — update a user (whitelist fields)
 export async function PATCH(req: NextRequest) {
-  const { error, status } = await requireAdmin();
+  const { error, status, session } = await requireAdmin();
   if (error) return NextResponse.json({ error }, { status });
 
   const body = await req.json();
@@ -182,11 +194,25 @@ export async function PATCH(req: NextRequest) {
     data.password = await bcrypt.hash(password, 10);
   }
 
+  // Determine if this is an isActive toggle
+  const isToggleActive = Object.keys(data).length === 1 && "isActive" in data;
+
   try {
     const user = await prisma.user.update({
       where: { id },
       data,
     });
+
+    logActivity({
+      userId: session!.user!.id!,
+      action: isToggleActive ? Actions.ADMIN_USER_TOGGLE_ACTIVE : Actions.ADMIN_USER_UPDATE,
+      category: "admin",
+      resource: "user",
+      resourceId: id,
+      detail: isToggleActive ? { isActive: data.isActive } : { updatedFields: Object.keys(data) },
+      req,
+    });
+
     return NextResponse.json({ user: { ...user, password: undefined } });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Erreur";
@@ -242,7 +268,18 @@ export async function DELETE(req: NextRequest) {
     await tx.exercise.deleteMany({ where: { userId: id } });
     await tx.studyGuide.deleteMany({ where: { userId: id } });
     await tx.enrollment.deleteMany({ where: { userId: id } });
+    await tx.activityLog.deleteMany({ where: { userId: id } });
     await tx.user.delete({ where: { id } });
+  });
+
+  logActivity({
+    userId: session!.user!.id!,
+    action: Actions.ADMIN_USER_DELETE,
+    category: "admin",
+    resource: "user",
+    resourceId: id,
+    detail: { deletedUserRole: targetUser.role },
+    req,
   });
 
   return NextResponse.json({ success: true });

@@ -88,6 +88,7 @@ model User {
   progress       UserProgress[]
   topicMastery   TopicMastery[]
   achievements   Achievement[]
+  activityLogs   ActivityLog[]
 }
 
 model Course {
@@ -270,4 +271,25 @@ model Achievement {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, badge])
+}
+
+// ============= ACTIVITY LOG =============
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  userId      String
+  action      String   // e.g., "login", "enroll", "chat.message", "exercise.generate", "exercise.score", "study_guide.generate", "flashcard.generate", "study_plan.generate", "admin.user.create", etc.
+  category    String   // "auth" | "learning" | "ai" | "admin"
+  resource    String?  // e.g., "course", "exercise", "chat_session", "user", "school"
+  resourceId  String?  // ID of the affected resource
+  detail      String?  // JSON string with extra context (e.g., course title, score, etc.)
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([action])
+  @@index([category])
+  @@index([createdAt])
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin";
+import { logActivity, Actions } from "@/lib/activity";
 
 // GET /api/admin/departments?schoolId=xxx — list departments
 export async function GET(req: NextRequest) {
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
 
 // POST /api/admin/departments — create
 export async function POST(req: NextRequest) {
-  const { error, status } = await requireAdmin();
+  const { error, status, session } = await requireAdmin();
   if (error) return NextResponse.json({ error }, { status });
 
   const body = await req.json();
@@ -43,6 +44,17 @@ export async function POST(req: NextRequest) {
     const department = await prisma.department.create({
       data: { schoolId, name, code, description },
     });
+
+    logActivity({
+      userId: session!.user!.id!,
+      action: Actions.ADMIN_DEPARTMENT_CREATE,
+      category: "admin",
+      resource: "department",
+      resourceId: department.id,
+      detail: { name, code, schoolId },
+      req,
+    });
+
     return NextResponse.json({ department }, { status: 201 });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Erreur";
@@ -58,7 +70,7 @@ export async function POST(req: NextRequest) {
 
 // PATCH /api/admin/departments — update or toggle active
 export async function PATCH(req: NextRequest) {
-  const { error, status } = await requireAdmin();
+  const { error, status, session } = await requireAdmin();
   if (error) return NextResponse.json({ error }, { status });
 
   const body = await req.json();
@@ -71,12 +83,22 @@ export async function PATCH(req: NextRequest) {
     data,
   });
 
+  logActivity({
+    userId: session!.user!.id!,
+    action: Actions.ADMIN_DEPARTMENT_UPDATE,
+    category: "admin",
+    resource: "department",
+    resourceId: id,
+    detail: { updatedFields: Object.keys(data) },
+    req,
+  });
+
   return NextResponse.json({ department });
 }
 
 // DELETE /api/admin/departments
 export async function DELETE(req: NextRequest) {
-  const { error, status } = await requireAdmin();
+  const { error, status, session } = await requireAdmin();
   if (error) return NextResponse.json({ error }, { status });
 
   const { searchParams } = new URL(req.url);
@@ -85,5 +107,15 @@ export async function DELETE(req: NextRequest) {
   if (!id) return NextResponse.json({ error: "ID requis" }, { status: 400 });
 
   await prisma.department.delete({ where: { id } });
+
+  logActivity({
+    userId: session!.user!.id!,
+    action: Actions.ADMIN_DEPARTMENT_DELETE,
+    category: "admin",
+    resource: "department",
+    resourceId: id,
+    req,
+  });
+
   return NextResponse.json({ success: true });
 }

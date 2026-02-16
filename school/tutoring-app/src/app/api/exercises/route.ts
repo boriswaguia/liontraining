@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { generateExercises } from "@/lib/gemini";
 import { buildStudentProfileForLLM, getOrCreateProgress } from "@/lib/progress";
+import { logActivity, Actions } from "@/lib/activity";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -51,6 +52,16 @@ export async function POST(req: NextRequest) {
         solutions: JSON.stringify(result.solutions),
         difficulty,
       },
+    });
+
+    logActivity({
+      userId: session.user.id,
+      action: Actions.EXERCISE_GENERATE,
+      category: "ai",
+      resource: "exercise",
+      resourceId: exercise.id,
+      detail: { courseId, topic, difficulty, count },
+      req,
     });
 
     return NextResponse.json({ exercise, ...result }, { status: 201 });
