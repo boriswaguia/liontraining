@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   Star,
   MessageCircle,
+  Bot,
 } from "lucide-react";
 import Link from "next/link";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -28,6 +29,7 @@ interface FlashcardDeck {
   cards: string;
   reviewed: boolean;
   confidence: number | null;
+  source?: string;
   createdAt: string;
   course: Course;
 }
@@ -249,10 +251,16 @@ export default function FlashcardsPage() {
                         <div className="w-4 h-4 rounded-full border-2 border-gray-300 mt-0.5 flex-shrink-0" />
                       )}
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm text-gray-800 truncate">
-                          {deck.title}
+                        <p className="font-medium text-sm text-gray-800 truncate flex items-center gap-1">
+                          {deck.source === "system" && <Bot className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />}
+                          <span className="truncate">{deck.title}</span>
                         </p>
-                        <div className="flex items-center gap-1 mt-1">
+                        <div className="flex items-center gap-1 mt-1 flex-wrap">
+                          {deck.source === "system" && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
+                              📌 {lang === "en" ? "Daily" : "Quotidien"}
+                            </span>
+                          )}
                           <span className="text-xs text-gray-400">
                             {deck.course?.code} • {deckCards.length} {t("flash.cards")}
                           </span>

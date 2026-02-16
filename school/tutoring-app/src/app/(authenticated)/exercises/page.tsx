@@ -10,9 +10,10 @@ import {
   ChevronUp,
   CheckCircle2,
   MessageCircle,
+  Bot,
 } from "lucide-react";
 import Link from "next/link";
-import ReactMarkdown from "react-markdown";
+import MathMarkdown from "@/components/MathMarkdown";
 import { useLanguage } from "@/hooks/useLanguage";
 
 interface Course {
@@ -28,6 +29,7 @@ interface Exercise {
   solutions: string;
   difficulty: string;
   score: number | null;
+  source?: string;
   createdAt: string;
   course: Course;
 }
@@ -270,10 +272,16 @@ export default function ExercisesPage() {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="font-medium text-sm text-gray-800">
-                        {ex.topic}
+                      <p className="font-medium text-sm text-gray-800 flex items-center gap-1">
+                        {ex.source === "system" && <Bot className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />}
+                        <span className="truncate">{ex.topic}</span>
                       </p>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        {ex.source === "system" && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
+                            📌 {lang === "en" ? "Daily" : "Quotidien"}
+                          </span>
+                        )}
                         <span
                           className={`text-xs px-2 py-0.5 rounded-full ${
                             DIFFICULTY_LABELS[ex.difficulty]?.color ||
@@ -341,7 +349,7 @@ export default function ExercisesPage() {
                         </span>
                         <div className="flex-1">
                           <div className="prose prose-sm max-w-none">
-                            <ReactMarkdown>{q}</ReactMarkdown>
+                            <MathMarkdown>{q}</MathMarkdown>
                           </div>
 
                           <button
@@ -368,7 +376,7 @@ export default function ExercisesPage() {
                                 {t("exercises.solution")}
                               </div>
                               <div className="prose prose-sm max-w-none">
-                                <ReactMarkdown>{solutions[i]}</ReactMarkdown>
+                                <MathMarkdown>{solutions[i]}</MathMarkdown>
                               </div>
                             </div>
                           )}

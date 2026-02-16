@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { FileText, Loader2, Plus, BookOpen, CheckCircle2, Circle, MessageCircle } from "lucide-react";
+import { FileText, Loader2, Plus, BookOpen, CheckCircle2, Circle, MessageCircle, Bot } from "lucide-react";
 import Link from "next/link";
-import ReactMarkdown from "react-markdown";
+import MathMarkdown from "@/components/MathMarkdown";
 import { useLanguage } from "@/hooks/useLanguage";
 
 interface Course {
@@ -20,6 +20,7 @@ interface StudyGuide {
   content: string;
   chapter: string | null;
   completed: boolean;
+  source?: string;
   createdAt: string;
   course: Course;
 }
@@ -194,13 +195,21 @@ export default function StudyGuidesPage() {
                         <Circle className="w-4 h-4 text-gray-300 mt-0.5 flex-shrink-0" />
                       )}
                       <div className="min-w-0">
-                        <p className={`font-medium text-sm truncate ${guide.completed ? "text-green-700" : "text-gray-800"}`}>
-                          {guide.title}
+                        <p className={`font-medium text-sm truncate flex items-center gap-1 ${guide.completed ? "text-green-700" : "text-gray-800"}`}>
+                          {guide.source === "system" && <Bot className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />}
+                          <span className="truncate">{guide.title}</span>
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {guide.course?.code} •{" "}
-                          {new Date(guide.createdAt).toLocaleDateString(lang === "en" ? "en-US" : "fr-FR")}
-                        </p>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          {guide.source === "system" && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
+                              📌 {lang === "en" ? "Daily" : "Quotidien"}
+                            </span>
+                          )}
+                          <span className="text-xs text-gray-400">
+                            {guide.course?.code} •{" "}
+                            {new Date(guide.createdAt).toLocaleDateString(lang === "en" ? "en-US" : "fr-FR")}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </button>
@@ -224,7 +233,7 @@ export default function StudyGuidesPage() {
                   </p>
                 </div>
                 <div className="prose max-w-none">
-                  <ReactMarkdown>{activeGuide.content}</ReactMarkdown>
+                  <MathMarkdown>{activeGuide.content}</MathMarkdown>
                 </div>
 
                 {/* Discuss with AI */}

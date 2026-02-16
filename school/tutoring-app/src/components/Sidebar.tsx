@@ -30,9 +30,9 @@ const navIcons = [LayoutDashboard, BookOpen, TrendingUp, FileText, Lightbulb, Gr
 const navHrefs = ["/dashboard", "/courses", "/progress", "/study-guides", "/exercises", "/flashcards", "/chat", "/planner"];
 const navKeys = ["nav.dashboard", "nav.courses", "nav.progress", "nav.studyGuides", "nav.exercises", "nav.flashcards", "nav.chat", "nav.planner"] as const;
 
-const adminIcons = [School, Building2, Users, BookOpen, UserCog, Activity, BarChart3];
-const adminHrefs = ["/admin/schools", "/admin/departments", "/admin/classes", "/admin/courses", "/admin/users", "/admin/activity", "/admin/analytics"];
-const adminKeys = ["nav.admin.schools", "nav.admin.departments", "nav.admin.classes", "nav.admin.courses", "nav.admin.users", "nav.admin.activity", "nav.admin.analytics"] as const;
+const adminIcons = [School, Building2, Users, BookOpen, UserCog, Activity, BarChart3, Settings];
+const adminHrefs = ["/admin/schools", "/admin/departments", "/admin/classes", "/admin/courses", "/admin/users", "/admin/activity", "/admin/analytics", "/admin/settings"];
+const adminKeys = ["nav.admin.schools", "nav.admin.departments", "nav.admin.classes", "nav.admin.courses", "nav.admin.users", "nav.admin.activity", "nav.admin.analytics", "nav.admin.settings"] as const;
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -58,7 +58,7 @@ export default function Sidebar() {
   const NavContent = () => (
     <>
       <div className="p-6 border-b border-blue-700">
-        <Link href="/dashboard" className="flex items-center gap-3">
+        <Link href={isAdmin ? "/admin/analytics" : "/dashboard"} className="flex items-center gap-3">
           <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
             <GraduationCap className="w-6 h-6 text-blue-600" />
           </div>
@@ -70,7 +70,7 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-        {navKeys.map((key, i) => {
+        {!isAdmin && navKeys.map((key, i) => {
           const href = navHrefs[i];
           const Icon = navIcons[i];
           const isActive = pathname === href || pathname.startsWith(href + "/");

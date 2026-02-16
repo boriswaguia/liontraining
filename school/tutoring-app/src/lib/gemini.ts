@@ -40,7 +40,7 @@ Based on the following course content, create a comprehensive but simplified stu
 6. If math is involved, show step-by-step solutions
 7. If a student profile is provided, focus on their weak areas and skip topics they've already mastered
 
-Use markdown formatting.
+Use markdown formatting. For math formulas, use $...$ for inline math and $$...$$ for display/block math.
 
 Course Content:
 ${courseContent.substring(0, 30000)}`;
@@ -75,13 +75,15 @@ ${profileSection}
 
 ${langInstruction}
 
-Based on the course content below, generate ${count} practice exercises with detailed solutions.
+Based on the course content below, generate ${count} practice exercises with DETAILED, COMPLETE solutions for each exercise.
 
-IMPORTANT: Return your response as valid JSON with this exact structure:
-{
-  "questions": ["Question 1 text...", "Question 2 text...", ...],
-  "solutions": ["Detailed solution 1...", "Detailed solution 2...", ...]
-}
+CRITICAL JSON RULES:
+1. Return ONLY valid JSON — no markdown fences, no extra text.
+2. Use this EXACT structure:
+{"questions":["Question 1...","Question 2..."],"solutions":["Full detailed solution for Q1...","Full detailed solution for Q2..."]}
+3. Each solution MUST fully solve the corresponding question step-by-step. NEVER say "see above" or "see the exercise text".
+4. Escape all backslashes in LaTeX as double backslashes: \\\\( instead of \\(
+5. For math, use $...$ for inline and $$...$$ for display math.
 
 Make exercises appropriate for the difficulty level:
 - easy: Basic recall and simple application
@@ -94,7 +96,7 @@ If student profile is provided:
 - Vary question types from previously attempted exercises
 - If the student has been struggling, include more guided/scaffolded questions
 
-Use LaTeX notation for any math formulas (e.g., \\(x^2\\)).
+Use $...$ for inline math and $$...$$ for display/block math (NOT \\( or \\[).
 
 Course Content:
 ${courseContent.substring(0, 25000)}`;
@@ -103,12 +105,62 @@ ${courseContent.substring(0, 25000)}`;
   const text = result.response.text();
 
   try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    // Strip markdown code fences if present (```json ... ```)
+    let cleaned = text.replace(/^```(?:json)?\s*\n?/m, "").replace(/\n?```\s*$/m, "");
+
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
+      let jsonStr = jsonMatch[0];
+
+      // Try parsing directly first
+      try {
+        const parsed = JSON.parse(jsonStr);
+        if (Array.isArray(parsed.questions) && Array.isArray(parsed.solutions)) {
+          return parsed;
+        }
+      } catch {
+        // LaTeX backslashes often break JSON parsing.
+        // Fix: escape unescaped backslashes inside string values.
+        // We replace single backslashes that aren't already escaped
+        // (not followed by another backslash, quote, n, r, t, or u).
+        jsonStr = jsonStr.replace(/\\(?![\\"/bfnrtu])/g, "\\\\");
+        try {
+          const parsed = JSON.parse(jsonStr);
+          if (Array.isArray(parsed.questions) && Array.isArray(parsed.solutions)) {
+            return parsed;
+          }
+        } catch {
+          // Still failed — try extracting arrays manually
+        }
+      }
+    }
+
+    // Last resort: try to split text into questions and solutions sections
+    const qMatch = text.match(/"questions"\s*:\s*\[([\s\S]*?)\]\s*,?\s*"solutions"/);
+    const sMatch = text.match(/"solutions"\s*:\s*\[([\s\S]*?)\]\s*\}?\s*$/);
+    if (qMatch && sMatch) {
+      const extractStrings = (raw: string): string[] => {
+        const items: string[] = [];
+        // Match quoted strings, handling escaped quotes
+        const re = /"((?:[^"\\]|\\.)*)"/g;
+        let m;
+        while ((m = re.exec(raw)) !== null) {
+          items.push(m[1].replace(/\\"/g, '"').replace(/\\n/g, "\n").replace(/\\\\/g, "\\"));
+        }
+        return items;
+      };
+      const questions = extractStrings(qMatch[1]);
+      const solutions = extractStrings(sMatch[1]);
+      if (questions.length > 0) {
+        // Pad solutions to match questions length
+        while (solutions.length < questions.length) {
+          solutions.push(language === "fr" ? "Solution non disponible." : "Solution not available.");
+        }
+        return { questions, solutions };
+      }
     }
   } catch {
-    // If JSON parsing fails, try to extract questions and solutions manually
+    // Complete parse failure
   }
 
   return {

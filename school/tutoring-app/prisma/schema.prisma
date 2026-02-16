@@ -89,6 +89,7 @@ model User {
   topicMastery   TopicMastery[]
   achievements   Achievement[]
   activityLogs   ActivityLog[]
+  recommendations DailyRecommendation[]
 }
 
 model Course {
@@ -135,6 +136,7 @@ model StudyGuide {
   content   String   // AI-generated markdown
   chapter   String?  // Optional: specific chapter/topic
   completed Boolean  @default(false)
+  source    String   @default("student") // "student" | "system"
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -149,6 +151,7 @@ model Exercise {
   solutions String   // JSON array of solutions
   difficulty String  @default("medium") // easy | medium | hard
   score     Int?     // Student's score if attempted
+  source    String   @default("student") // "student" | "system"
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -162,9 +165,42 @@ model FlashcardDeck {
   cards     String      // JSON array of {front, back} objects
   reviewed  Boolean     @default(false)
   confidence Int?       // 0-100 self-reported confidence after review
+  source    String      @default("student") // "student" | "system"
   createdAt DateTime    @default(now())
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   course    Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+// ============= SYSTEM SETTINGS =============
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique // e.g., "daily_recommendations_enabled"
+  value     String   // JSON value
+  updatedAt DateTime @updatedAt
+}
+
+// ============= DAILY RECOMMENDATIONS =============
+
+model DailyRecommendation {
+  id             String   @id @default(cuid())
+  userId         String
+  courseId        String
+  type           String   // "exercise" | "study_guide" | "flashcard"
+  contentId      String   // ID of the generated Exercise/StudyGuide/FlashcardDeck
+  reason         String   // Why this was recommended (e.g., "Low mastery on topic X")
+  emailSent      Boolean  @default(false)
+  emailSentAt    DateTime?
+  viewed         Boolean  @default(false)
+  viewedAt       DateTime?
+  completed      Boolean  @default(false)
+  completedAt    DateTime?
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([userId, createdAt])
 }
 
 model ChatSession {

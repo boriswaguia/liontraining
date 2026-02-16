@@ -70,6 +70,9 @@ export const Actions = {
   STUDY_PLAN_GENERATE: "study_plan.generate",
   STUDY_PLAN_TASK_TOGGLE: "study_plan.task_toggle",
 
+  // System-generated content
+  DAILY_RECOMMENDATION: "daily_recommendation",
+
   // Admin actions
   ADMIN_USER_CREATE: "admin.user.create",
   ADMIN_USER_UPDATE: "admin.user.update",

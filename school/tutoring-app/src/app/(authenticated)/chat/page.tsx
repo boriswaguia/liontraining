@@ -14,7 +14,7 @@ import {
   FileText,
   CalendarDays,
 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import MathMarkdown from "@/components/MathMarkdown";
 import { useLanguage } from "@/hooks/useLanguage";
 import type { TranslationKey } from "@/lib/i18n";
 
@@ -277,7 +277,7 @@ export default function ChatPage() {
                   >
                     {msg.role === "assistant" ? (
                       <div className="prose prose-sm max-w-none">
-                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        <MathMarkdown>{msg.content}</MathMarkdown>
                       </div>
                     ) : (
                       <p className="text-sm whitespace-pre-wrap">

@@ -163,6 +163,15 @@ const translations = {
   "nav.admin.users": { fr: "Utilisateurs", en: "Users" },
   "nav.admin.activity": { fr: "Journal d'activité", en: "Activity Log" },
   "nav.admin.analytics": { fr: "Tableau de bord", en: "Analytics" },
+  "nav.admin.settings": { fr: "Réglages IA", en: "AI Settings" },
+  "admin.settings.title": {
+    fr: "Recommandations quotidiennes",
+    en: "Daily Recommendations",
+  },
+  "admin.settings.subtitle": {
+    fr: "Gérez l'agent IA qui génère du contenu personnalisé pour chaque étudiant",
+    en: "Manage the AI agent that generates personalized content for each student",
+  },
   "admin.analytics.title": {
     fr: "Tableau de bord analytique",
     en: "Analytics Dashboard",
@@ -689,5 +698,6 @@ export function getAdminNavigation(lang: Language) {
     { name: t("nav.admin.users", lang), href: "/admin/users" },
     { name: t("nav.admin.activity", lang), href: "/admin/activity" },
     { name: t("nav.admin.analytics", lang), href: "/admin/analytics" },
+    { name: t("nav.admin.settings", lang), href: "/admin/settings" },
   ];
 }
