@@ -26,6 +26,7 @@ import {
   ChevronDown,
   ChevronUp,
   Eye,
+  Coins,
 } from "lucide-react";
 import MathMarkdown from "@/components/MathMarkdown";
 
@@ -36,6 +37,8 @@ interface UserDetail {
   role: string;
   language: string;
   isActive: boolean;
+  creditBalance: number;
+  plan: string;
   schoolId: string | null;
   departmentId: string | null;
   classId: string | null;
@@ -180,6 +183,9 @@ export default function AdminUserDetailPage({
   const [expandedGuide, setExpandedGuide] = useState<string | null>(null);
   const [expandedDeck, setExpandedDeck] = useState<string | null>(null);
   const [showSolutions, setShowSolutions] = useState<Record<string, boolean>>({});
+  const [creditAmount, setCreditAmount] = useState("");
+  const [creditDesc, setCreditDesc] = useState("");
+  const [grantingCredits, setGrantingCredits] = useState(false);
 
   useEffect(() => {
     async function fetchUser() {
@@ -234,6 +240,7 @@ export default function AdminUserDetailPage({
     { key: "flashcards", label: `Flashcards (${user._count.flashcardDecks})`, icon: GraduationCap },
     { key: "chats", label: `Chats (${user._count.chatSessions})`, icon: MessageCircle },
     { key: "achievements", label: `Succès (${user._count.achievements})`, icon: Trophy },
+    { key: "credits", label: `Crédits (${user.creditBalance})`, icon: Coins },
   ];
 
   // Compute aggregate stats
@@ -802,6 +809,86 @@ export default function AdminUserDetailPage({
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Credits Tab */}
+        {activeTab === "credits" && (
+          <div className="space-y-6">
+            {/* Balance card */}
+            <div className="bg-white rounded-xl border shadow-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <Coins className="w-5 h-5 text-amber-500" />
+                  Solde de crédits
+                </h3>
+                <div className="text-right">
+                  <p className="text-3xl font-bold text-amber-600">{user.creditBalance}</p>
+                  <p className="text-xs text-gray-500">crédits disponibles</p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-500">
+                Plan: <span className="font-medium text-gray-700">{user.plan === "free" ? "Gratuit" : user.plan}</span>
+              </p>
+            </div>
+
+            {/* Grant credits form */}
+            <div className="bg-white rounded-xl border shadow-sm p-6">
+              <h3 className="font-semibold text-gray-900 mb-4">Attribuer des crédits</h3>
+              <div className="flex gap-3 items-end flex-wrap">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Montant</label>
+                  <input
+                    type="number"
+                    value={creditAmount}
+                    onChange={(e) => setCreditAmount(e.target.value)}
+                    className="px-3 py-2 border rounded-lg w-32"
+                    placeholder="50"
+                  />
+                </div>
+                <div className="flex-1 min-w-[200px]">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Raison</label>
+                  <input
+                    type="text"
+                    value={creditDesc}
+                    onChange={(e) => setCreditDesc(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg"
+                    placeholder="Bonus de bienvenue"
+                  />
+                </div>
+                <button
+                  disabled={grantingCredits || !creditAmount || Number(creditAmount) === 0}
+                  onClick={async () => {
+                    setGrantingCredits(true);
+                    try {
+                      const res = await fetch("/api/admin/credits", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          userId: user.id,
+                          amount: Number(creditAmount),
+                          description: creditDesc || `Admin grant: ${creditAmount} crédits`,
+                        }),
+                      });
+                      if (res.ok) {
+                        const data = await res.json();
+                        setUser({ ...user, creditBalance: data.creditBalance });
+                        setCreditAmount("");
+                        setCreditDesc("");
+                      }
+                    } finally {
+                      setGrantingCredits(false);
+                    }
+                  }}
+                  className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 whitespace-nowrap"
+                >
+                  {grantingCredits ? "..." : "Attribuer"}
+                </button>
+              </div>
+              <p className="text-xs text-gray-400 mt-2">
+                Utilisez un montant négatif pour retirer des crédits.
+              </p>
+            </div>
           </div>
         )}
       </div>

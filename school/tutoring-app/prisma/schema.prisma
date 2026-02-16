@@ -74,6 +74,8 @@ model User {
   schoolId       String?
   departmentId   String?
   classId        String?
+  creditBalance  Int             @default(0)
+  plan           String          @default("free") // "free" | "starter" | "pro"
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   school         School?         @relation(fields: [schoolId], references: [id])
@@ -90,6 +92,8 @@ model User {
   achievements   Achievement[]
   activityLogs   ActivityLog[]
   recommendations DailyRecommendation[]
+  usageQuotas    UsageQuota[]
+  creditTransactions CreditTransaction[]
 }
 
 model Course {
@@ -328,4 +332,47 @@ model ActivityLog {
   @@index([action])
   @@index([category])
   @@index([createdAt])
+}
+
+// ============= USAGE QUOTAS & CREDITS =============
+
+model UsageQuota {
+  id           String   @id @default(cuid())
+  userId       String
+  date         DateTime @db.Date // Just the date (no time)
+  generations  Int      @default(0) // exercises + guides + flashcards + study plans
+  chatMessages Int      @default(0)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId])
+}
+
+model CreditTransaction {
+  id            String   @id @default(cuid())
+  userId        String
+  amount        Int      // positive = credit added, negative = credit spent
+  type          String   // "purchase" | "admin_grant" | "usage" | "refund" | "reset"
+  action        String?  // "exercise" | "study_guide" | "flashcards" | "chat" | "study_plan" (for usage type)
+  description   String
+  balanceBefore Int
+  balanceAfter  Int
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([type])
+}
+
+model CreditPack {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "Starter Pack"
+  credits     Int      // e.g., 50
+  priceCFA    Int      // e.g., 1000
+  description String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

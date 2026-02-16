@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useLanguage } from "@/hooks/useLanguage";
+import QuotaExceededModal from "@/components/QuotaExceededModal";
 
 interface Course {
   id: string;
@@ -56,6 +57,7 @@ export default function PlannerPage() {
   const [hoursPerDay, setHoursPerDay] = useState(2);
   const [loading, setLoading] = useState(false);
   const [activePlan, setActivePlan] = useState<StudyPlanItem | null>(null);
+  const [quotaModal, setQuotaModal] = useState<{ show: boolean; reason?: string; creditBalance?: number; creditCost?: number }>({ show: false });
 
   useEffect(() => {
     fetch("/api/courses")
@@ -90,6 +92,10 @@ export default function PlannerPage() {
         }),
       });
       const data = await res.json();
+      if (res.status === 402) {
+        setQuotaModal({ show: true, reason: data.reason, creditBalance: data.creditBalance, creditCost: data.creditCost });
+        return;
+      }
       if (data.plan) {
         const newPlan = {
           ...data.plan,
@@ -395,6 +401,15 @@ export default function PlannerPage() {
           </div>
         </div>
       </div>
+
+      <QuotaExceededModal
+        show={quotaModal.show}
+        onClose={() => setQuotaModal({ show: false })}
+        reason={quotaModal.reason}
+        creditBalance={quotaModal.creditBalance}
+        creditCost={quotaModal.creditCost}
+        lang={lang}
+      />
     </div>
   );
 }

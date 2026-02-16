@@ -15,6 +15,7 @@ import {
   Bot,
 } from "lucide-react";
 import Link from "next/link";
+import QuotaExceededModal from "@/components/QuotaExceededModal";
 import { useLanguage } from "@/hooks/useLanguage";
 
 interface Course {
@@ -56,6 +57,7 @@ export default function FlashcardsPage() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [showConfidence, setShowConfidence] = useState(false);
   const [savingConfidence, setSavingConfidence] = useState(false);
+  const [quotaModal, setQuotaModal] = useState<{ show: boolean; reason?: string; creditBalance?: number; creditCost?: number }>({ show: false });
 
   useEffect(() => {
     fetch("/api/courses")
@@ -83,6 +85,11 @@ export default function FlashcardsPage() {
           count: 15,
         }),
       });
+      if (res.status === 402) {
+        const err = await res.json();
+        setQuotaModal({ show: true, reason: err.reason, creditBalance: err.creditBalance, creditCost: err.creditCost });
+        return;
+      }
       const data = await res.json();
       if (data.deck) {
         const newDeck = {
@@ -455,6 +462,14 @@ export default function FlashcardsPage() {
           </div>
         </div>
       </div>
+      <QuotaExceededModal
+        show={quotaModal.show}
+        onClose={() => setQuotaModal({ show: false })}
+        reason={quotaModal.reason}
+        creditBalance={quotaModal.creditBalance}
+        creditCost={quotaModal.creditCost}
+        lang={lang}
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { FileText, Loader2, Plus, BookOpen, CheckCircle2, Circle, MessageCircle, Bot } from "lucide-react";
 import Link from "next/link";
 import MathMarkdown from "@/components/MathMarkdown";
+import QuotaExceededModal from "@/components/QuotaExceededModal";
 import { useLanguage } from "@/hooks/useLanguage";
 
 interface Course {
@@ -38,6 +39,7 @@ export default function StudyGuidesPage() {
   const [chapter, setChapter] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeGuide, setActiveGuide] = useState<StudyGuide | null>(null);
+  const [quotaModal, setQuotaModal] = useState<{ show: boolean; reason?: string; creditBalance?: number; creditCost?: number }>({ show: false });
 
   const toggleGuideComplete = async (guideId: string, completed: boolean) => {
     try {
@@ -82,6 +84,11 @@ export default function StudyGuidesPage() {
           chapter: chapter || undefined,
         }),
       });
+      if (res.status === 402) {
+        const err = await res.json();
+        setQuotaModal({ show: true, reason: err.reason, creditBalance: err.creditBalance, creditCost: err.creditCost });
+        return;
+      }
       const data = await res.json();
       if (data.guide) {
         setGuides((prev) => [{ ...data.guide, course: courses.find((c) => c.id === selectedCourse)! }, ...prev]);
@@ -279,6 +286,14 @@ export default function StudyGuidesPage() {
           </div>
         </div>
       </div>
+      <QuotaExceededModal
+        show={quotaModal.show}
+        onClose={() => setQuotaModal({ show: false })}
+        reason={quotaModal.reason}
+        creditBalance={quotaModal.creditBalance}
+        creditCost={quotaModal.creditCost}
+        lang={lang}
+      />
     </div>
   );
 }

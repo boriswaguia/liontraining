@@ -164,6 +164,8 @@ const translations = {
   "nav.admin.activity": { fr: "Journal d'activité", en: "Activity Log" },
   "nav.admin.analytics": { fr: "Tableau de bord", en: "Analytics" },
   "nav.admin.settings": { fr: "Réglages IA", en: "AI Settings" },
+  "nav.admin.creditPacks": { fr: "Packs Crédits", en: "Credit Packs" },
+  "nav.credits": { fr: "Mes Crédits", en: "My Credits" },
   "admin.settings.title": {
     fr: "Recommandations quotidiennes",
     en: "Daily Recommendations",
@@ -616,6 +618,96 @@ const translations = {
   "mastery.average": { fr: "Moyen", en: "Average" },
   "mastery.beginner": { fr: "Débutant", en: "Beginner" },
   "mastery.discover": { fr: "À découvrir", en: "To discover" },
+
+  // ============= CREDITS & QUOTAS =============
+  "credits.title": { fr: "Mes Crédits", en: "My Credits" },
+  "credits.subtitle": {
+    fr: "Gérez votre quota gratuit et vos crédits",
+    en: "Manage your free quota and credits",
+  },
+  "credits.balance": { fr: "Solde", en: "Balance" },
+  "credits.unit": { fr: "crédits", en: "credits" },
+  "credits.dailyFree": { fr: "Quota gratuit du jour", en: "Today's free quota" },
+  "credits.generations": { fr: "Générations IA", en: "AI Generations" },
+  "credits.chatMessages": { fr: "Messages chat", en: "Chat messages" },
+  "credits.genDesc": {
+    fr: "Exercices, guides, flashcards, plans d'étude",
+    en: "Exercises, guides, flashcards, study plans",
+  },
+  "credits.chatDesc": {
+    fr: "Messages envoyés au tuteur IA",
+    en: "Messages sent to the AI tutor",
+  },
+  "credits.resetInfo": {
+    fr: "Le quota gratuit se réinitialise chaque jour à minuit UTC. Au-delà, les crédits sont utilisés.",
+    en: "The free quota resets every day at midnight UTC. Beyond that, credits are used.",
+  },
+  "credits.tab.costs": { fr: "Coûts", en: "Costs" },
+  "credits.tab.packs": { fr: "Acheter", en: "Buy" },
+  "credits.tab.history": { fr: "Historique", en: "History" },
+  "credits.costsTitle": {
+    fr: "Coût en crédits par action",
+    en: "Credit cost per action",
+  },
+  "credits.costsNote": {
+    fr: "Les crédits ne sont utilisés qu'après épuisement du quota gratuit quotidien.",
+    en: "Credits are only used after the daily free quota is exhausted.",
+  },
+  "credits.action.exercise": { fr: "Exercice", en: "Exercise" },
+  "credits.action.study_guide": { fr: "Guide d'étude", en: "Study guide" },
+  "credits.action.flashcards": { fr: "Flashcards", en: "Flashcards" },
+  "credits.action.chat": { fr: "Message chat", en: "Chat message" },
+  "credits.action.study_plan": { fr: "Plan d'étude", en: "Study plan" },
+  "credits.popular": { fr: "Populaire", en: "Popular" },
+  "credits.perCredit": { fr: "crédit", en: "credit" },
+  "credits.buy": { fr: "Acheter", en: "Buy" },
+  "credits.noPacks": {
+    fr: "Aucun pack disponible pour le moment",
+    en: "No packs available at the moment",
+  },
+  "credits.noHistory": {
+    fr: "Aucune transaction",
+    en: "No transactions yet",
+  },
+  "credits.balanceAfter": { fr: "Solde après", en: "Balance after" },
+  "credits.quotaExceeded": {
+    fr: "Quota épuisé ! Achetez des crédits pour continuer.",
+    en: "Quota exhausted! Buy credits to continue.",
+  },
+  "credits.insufficientCredits": {
+    fr: "Crédits insuffisants",
+    en: "Insufficient credits",
+  },
+  "credits.needed": { fr: "nécessaires", en: "needed" },
+  "credits.buyCredits": { fr: "Acheter des crédits", en: "Buy credits" },
+
+  // ============= ADMIN CREDIT PACKS =============
+  "admin.creditPacks.title": { fr: "Packs de Crédits", en: "Credit Packs" },
+  "admin.creditPacks.subtitle": {
+    fr: "Gérez les packs de crédits disponibles à l'achat",
+    en: "Manage credit packs available for purchase",
+  },
+  "admin.creditPacks.add": { fr: "Nouveau pack", en: "New pack" },
+  "admin.creditPacks.edit": { fr: "Modifier le pack", en: "Edit pack" },
+  "admin.creditPacks.name": { fr: "Nom", en: "Name" },
+  "admin.creditPacks.credits": { fr: "Crédits", en: "Credits" },
+  "admin.creditPacks.price": { fr: "Prix", en: "Price" },
+  "admin.creditPacks.priceFCFA": { fr: "Prix (FCFA)", en: "Price (FCFA)" },
+  "admin.creditPacks.perCredit": { fr: "Par crédit", en: "Per credit" },
+  "admin.creditPacks.status": { fr: "Statut", en: "Status" },
+  "admin.creditPacks.sortOrder": { fr: "Ordre", en: "Order" },
+  "admin.creditPacks.empty": {
+    fr: "Aucun pack de crédits. Créez-en un pour commencer.",
+    en: "No credit packs. Create one to get started.",
+  },
+  "admin.creditPacks.costsTitle": {
+    fr: "Coûts par action (pour les étudiants)",
+    en: "Costs per action (for students)",
+  },
+  "admin.creditPacks.freeTierInfo": {
+    fr: "Tier gratuit : 5 générations IA + 15 messages chat par jour. Au-delà, les crédits sont consommés.",
+    en: "Free tier: 5 AI generations + 15 chat messages per day. Beyond that, credits are consumed.",
+  },
 
   // ============= API / REGISTER ERRORS =============
   "api.register.required": {

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { chatWithTutor } from "@/lib/gemini";
 import { buildStudentProfileForLLM, recordActivity } from "@/lib/progress";
 import { logActivity, Actions } from "@/lib/activity";
+import { checkAndConsumeQuota } from "@/lib/credits";
 
 // ── Input safety guard ──────────────────────────────────────────────
 const MAX_MESSAGE_LENGTH = 4000;
@@ -144,6 +145,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ response: refusal, blocked: true });
     }
 
+    // Check quota / credits
+    const quotaResult = await checkAndConsumeQuota(session.user.id, "chat");
+    if (!quotaResult.allowed) {
+      return NextResponse.json(
+        { error: "quota_exceeded", reason: quotaResult.reason, creditBalance: quotaResult.creditBalance, creditCost: quotaResult.creditCost },
+        { status: 402 }
+      );
+    }
+
     let chatSession;
 
     if (sessionId) {
@@ -236,6 +246,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       sessionId: chatSession.id,
       response: aiResponse,
+      quota: { freeRemaining: quotaResult.freeRemaining, usedCredits: quotaResult.usedCredits, creditBalance: quotaResult.creditBalance },
     });
   } catch (error) {
     console.error("Chat error:", error);

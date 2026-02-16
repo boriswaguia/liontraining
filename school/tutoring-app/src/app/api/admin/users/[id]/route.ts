@@ -21,6 +21,8 @@ export async function GET(
       role: true,
       language: true,
       isActive: true,
+      creditBalance: true,
+      plan: true,
       schoolId: true,
       departmentId: true,
       classId: true,

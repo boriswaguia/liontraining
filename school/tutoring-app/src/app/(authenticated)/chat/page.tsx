@@ -15,6 +15,7 @@ import {
   CalendarDays,
 } from "lucide-react";
 import MathMarkdown from "@/components/MathMarkdown";
+import QuotaExceededModal from "@/components/QuotaExceededModal";
 import { useLanguage } from "@/hooks/useLanguage";
 import type { TranslationKey } from "@/lib/i18n";
 
@@ -63,6 +64,7 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [quotaModal, setQuotaModal] = useState<{ show: boolean; reason?: string; creditBalance?: number; creditCost?: number }>({ show: false });
 
   useEffect(() => {
     fetch("/api/courses")
@@ -123,6 +125,14 @@ export default function ChatPage() {
           contextId: !activeSessionId ? contextId : undefined,
         }),
       });
+      if (res.status === 402) {
+        const err = await res.json();
+        setQuotaModal({ show: true, reason: err.reason, creditBalance: err.creditBalance, creditCost: err.creditCost });
+        // Remove the user message we optimistically added
+        setMessages((prev) => prev.slice(0, -1));
+        setLoading(false);
+        return;
+      }
       const data = await res.json();
 
       if (data.response) {
@@ -337,6 +347,14 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
+      <QuotaExceededModal
+        show={quotaModal.show}
+        onClose={() => setQuotaModal({ show: false })}
+        reason={quotaModal.reason}
+        creditBalance={quotaModal.creditBalance}
+        creditCost={quotaModal.creditCost}
+        lang={lang}
+      />
     </div>
   );
 }

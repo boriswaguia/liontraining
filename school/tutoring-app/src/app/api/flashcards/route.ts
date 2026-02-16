@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { generateFlashcards } from "@/lib/gemini";
 import { buildStudentProfileForLLM, recordActivity } from "@/lib/progress";
 import { logActivity, Actions } from "@/lib/activity";
+import { checkAndConsumeQuota } from "@/lib/credits";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -12,6 +13,15 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    // Check quota / credits
+    const quota = await checkAndConsumeQuota(session.user.id, "flashcards");
+    if (!quota.allowed) {
+      return NextResponse.json(
+        { error: "quota_exceeded", reason: quota.reason, creditBalance: quota.creditBalance, creditCost: quota.creditCost },
+        { status: 402 }
+      );
+    }
+
     const { courseId, topic, count = 15 } = await req.json();
 
     const course = await prisma.course.findUnique({
@@ -59,7 +69,7 @@ export async function POST(req: NextRequest) {
       req,
     });
 
-    return NextResponse.json({ deck, cards }, { status: 201 });
+    return NextResponse.json({ deck, cards, quota: { freeRemaining: quota.freeRemaining, usedCredits: quota.usedCredits, creditBalance: quota.creditBalance } }, { status: 201 });
   } catch (error) {
     console.error("Flashcard generation error:", error);
     return NextResponse.json(

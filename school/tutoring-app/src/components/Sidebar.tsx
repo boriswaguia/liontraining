@@ -22,17 +22,18 @@ import {
   UserCog,
   Activity,
   BarChart3,
+  Coins,
 } from "lucide-react";
 import { useState } from "react";
 import { Language, t } from "@/lib/i18n";
 
-const navIcons = [LayoutDashboard, BookOpen, TrendingUp, FileText, Lightbulb, GraduationCap, MessageCircle, CalendarDays];
-const navHrefs = ["/dashboard", "/courses", "/progress", "/study-guides", "/exercises", "/flashcards", "/chat", "/planner"];
-const navKeys = ["nav.dashboard", "nav.courses", "nav.progress", "nav.studyGuides", "nav.exercises", "nav.flashcards", "nav.chat", "nav.planner"] as const;
+const navIcons = [LayoutDashboard, BookOpen, TrendingUp, FileText, Lightbulb, GraduationCap, MessageCircle, CalendarDays, Coins];
+const navHrefs = ["/dashboard", "/courses", "/progress", "/study-guides", "/exercises", "/flashcards", "/chat", "/planner", "/credits"];
+const navKeys = ["nav.dashboard", "nav.courses", "nav.progress", "nav.studyGuides", "nav.exercises", "nav.flashcards", "nav.chat", "nav.planner", "nav.credits"] as const;
 
-const adminIcons = [School, Building2, Users, BookOpen, UserCog, Activity, BarChart3, Settings];
-const adminHrefs = ["/admin/schools", "/admin/departments", "/admin/classes", "/admin/courses", "/admin/users", "/admin/activity", "/admin/analytics", "/admin/settings"];
-const adminKeys = ["nav.admin.schools", "nav.admin.departments", "nav.admin.classes", "nav.admin.courses", "nav.admin.users", "nav.admin.activity", "nav.admin.analytics", "nav.admin.settings"] as const;
+const adminIcons = [School, Building2, Users, BookOpen, UserCog, Activity, BarChart3, Coins, Settings];
+const adminHrefs = ["/admin/schools", "/admin/departments", "/admin/classes", "/admin/courses", "/admin/users", "/admin/activity", "/admin/analytics", "/admin/credit-packs", "/admin/settings"];
+const adminKeys = ["nav.admin.schools", "nav.admin.departments", "nav.admin.classes", "nav.admin.courses", "nav.admin.users", "nav.admin.activity", "nav.admin.analytics", "nav.admin.creditPacks", "nav.admin.settings"] as const;
 
 export default function Sidebar() {
   const pathname = usePathname();

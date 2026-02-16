@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import MathMarkdown from "@/components/MathMarkdown";
+import QuotaExceededModal from "@/components/QuotaExceededModal";
 import { useLanguage } from "@/hooks/useLanguage";
 
 interface Course {
@@ -64,6 +65,7 @@ export default function ExercisesPage() {
     newDifficulty: string;
     overallMastery: number;
   } | null>(null);
+  const [quotaModal, setQuotaModal] = useState<{ show: boolean; reason?: string; creditBalance?: number; creditCost?: number }>({ show: false });
 
   useEffect(() => {
     fetch("/api/courses")
@@ -92,6 +94,11 @@ export default function ExercisesPage() {
           count,
         }),
       });
+      if (res.status === 402) {
+        const err = await res.json();
+        setQuotaModal({ show: true, reason: err.reason, creditBalance: err.creditBalance, creditCost: err.creditCost });
+        return;
+      }
       const data = await res.json();
       if (data.exercise) {
         const newExercise = {
@@ -471,6 +478,14 @@ export default function ExercisesPage() {
           </div>
         </div>
       </div>
+      <QuotaExceededModal
+        show={quotaModal.show}
+        onClose={() => setQuotaModal({ show: false })}
+        reason={quotaModal.reason}
+        creditBalance={quotaModal.creditBalance}
+        creditCost={quotaModal.creditCost}
+        lang={lang}
+      />
     </div>
   );
 }
