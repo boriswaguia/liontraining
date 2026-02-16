@@ -162,6 +162,15 @@ const translations = {
   "nav.admin.courses": { fr: "Cours", en: "Courses" },
   "nav.admin.users": { fr: "Utilisateurs", en: "Users" },
   "nav.admin.activity": { fr: "Journal d'activité", en: "Activity Log" },
+  "nav.admin.analytics": { fr: "Tableau de bord", en: "Analytics" },
+  "admin.analytics.title": {
+    fr: "Tableau de bord analytique",
+    en: "Analytics Dashboard",
+  },
+  "admin.analytics.subtitle": {
+    fr: "Vue d'ensemble de l'activité et des performances de la plateforme",
+    en: "Overview of platform activity and performance",
+  },
   "admin.activity.title": {
     fr: "Journal d'activité",
     en: "Activity Log",
@@ -679,5 +688,6 @@ export function getAdminNavigation(lang: Language) {
     { name: t("nav.admin.courses", lang), href: "/admin/courses" },
     { name: t("nav.admin.users", lang), href: "/admin/users" },
     { name: t("nav.admin.activity", lang), href: "/admin/activity" },
+    { name: t("nav.admin.analytics", lang), href: "/admin/analytics" },
   ];
 }
