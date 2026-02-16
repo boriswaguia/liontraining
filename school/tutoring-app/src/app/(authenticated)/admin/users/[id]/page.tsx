@@ -23,7 +23,11 @@ import {
   Building2,
   Users,
   ClipboardList,
+  ChevronDown,
+  ChevronUp,
+  Eye,
 } from "lucide-react";
+import MathMarkdown from "@/components/MathMarkdown";
 
 interface UserDetail {
   id: string;
@@ -58,6 +62,8 @@ interface UserDetail {
     topic: string;
     difficulty: string;
     score: number | null;
+    questions: string;
+    solutions: string;
     createdAt: string;
     course: { id: string; code: string; title: string };
   }[];
@@ -66,6 +72,7 @@ interface UserDetail {
     title: string;
     chapter: string | null;
     completed: boolean;
+    content: string;
     createdAt: string;
     course: { id: string; code: string; title: string };
   }[];
@@ -74,6 +81,7 @@ interface UserDetail {
     title: string;
     reviewed: boolean;
     confidence: number | null;
+    cards: string;
     createdAt: string;
     course: { id: string; code: string; title: string };
   }[];
@@ -168,6 +176,10 @@ export default function AdminUserDetailPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<string>("overview");
+  const [expandedExercise, setExpandedExercise] = useState<string | null>(null);
+  const [expandedGuide, setExpandedGuide] = useState<string | null>(null);
+  const [expandedDeck, setExpandedDeck] = useState<string | null>(null);
+  const [showSolutions, setShowSolutions] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     async function fetchUser() {
@@ -518,141 +530,214 @@ export default function AdminUserDetailPage({
 
         {/* Exercises Tab */}
         {activeTab === "exercises" && (
-          <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+          <div className="space-y-3">
             {user.exercises.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
+              <div className="bg-white rounded-xl border text-center py-12 text-gray-500">
                 <Lightbulb className="w-8 h-8 mx-auto mb-2 text-gray-300" />
                 <p>Aucun exercice</p>
               </div>
             ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50 border-b">
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Sujet</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Cours</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Difficulté</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Score</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {user.exercises.map((ex) => (
-                    <tr key={ex.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium text-gray-900">{ex.topic}</td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">{ex.course.code}</td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                            DIFFICULTY_COLORS[ex.difficulty] || "bg-gray-100 text-gray-700"
-                          }`}
-                        >
+              user.exercises.map((ex) => {
+                const isOpen = expandedExercise === ex.id;
+                let questions: string[] = [];
+                let solutions: string[] = [];
+                if (isOpen) {
+                  try { questions = JSON.parse(ex.questions); } catch { questions = [ex.questions]; }
+                  try { solutions = JSON.parse(ex.solutions); } catch { solutions = [ex.solutions]; }
+                }
+                return (
+                  <div key={ex.id} className="bg-white rounded-xl border shadow-sm overflow-hidden">
+                    <button
+                      onClick={() => setExpandedExercise(isOpen ? null : ex.id)}
+                      className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Lightbulb className="w-4 h-4 text-yellow-500 shrink-0" />
+                        <div className="text-left min-w-0">
+                          <p className="font-medium text-gray-900 truncate">{ex.topic}</p>
+                          <p className="text-xs text-gray-500">{ex.course.code} — {ex.course.title} · {formatDate(ex.createdAt)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${DIFFICULTY_COLORS[ex.difficulty] || "bg-gray-100 text-gray-700"}`}>
                           {ex.difficulty}
                         </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        {ex.score !== null ? (
-                          <span className="font-medium text-gray-900">{ex.score}%</span>
-                        ) : (
-                          <span className="text-gray-400 italic">—</span>
+                        {ex.score !== null && (
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                            ex.score >= 75 ? "bg-green-100 text-green-700" : ex.score >= 50 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
+                          }`}>
+                            {ex.score}%
+                          </span>
                         )}
-                      </td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(ex.createdAt)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                      </div>
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-5 border-t border-gray-100">
+                        <div className="space-y-4 mt-4">
+                          {questions.map((q: string, i: number) => (
+                            <div key={i} className="border border-gray-100 rounded-lg p-4">
+                              <div className="flex items-start gap-3">
+                                <span className="flex-shrink-0 w-7 h-7 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">
+                                  {i + 1}
+                                </span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="prose prose-sm max-w-none">
+                                    <MathMarkdown>{q}</MathMarkdown>
+                                  </div>
+                                  {solutions[i] && (
+                                    <>
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); setShowSolutions(prev => ({ ...prev, [`${ex.id}-${i}`]: !prev[`${ex.id}-${i}`] })); }}
+                                        className="mt-2 flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium"
+                                      >
+                                        <Eye className="w-3 h-3" />
+                                        {showSolutions[`${ex.id}-${i}`] ? "Masquer la solution" : "Voir la solution"}
+                                      </button>
+                                      {showSolutions[`${ex.id}-${i}`] && (
+                                        <div className="mt-2 p-3 bg-green-50 rounded-lg border border-green-200">
+                                          <div className="flex items-center gap-1 text-green-700 text-xs font-medium mb-1">
+                                            <CheckCircle2 className="w-3 h-3" /> Solution
+                                          </div>
+                                          <div className="prose prose-sm max-w-none">
+                                            <MathMarkdown>{solutions[i]}</MathMarkdown>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
         )}
 
         {/* Study Guides Tab */}
         {activeTab === "guides" && (
-          <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+          <div className="space-y-3">
             {user.studyGuides.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
+              <div className="bg-white rounded-xl border text-center py-12 text-gray-500">
                 <FileText className="w-8 h-8 mx-auto mb-2 text-gray-300" />
                 <p>Aucun guide d&apos;étude</p>
               </div>
             ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50 border-b">
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Titre</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Cours</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Chapitre</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Statut</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {user.studyGuides.map((sg) => (
-                    <tr key={sg.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium text-gray-900">{sg.title}</td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">{sg.course.code}</td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">{sg.chapter || "—"}</td>
-                      <td className="px-4 py-3">
+              user.studyGuides.map((sg) => {
+                const isOpen = expandedGuide === sg.id;
+                return (
+                  <div key={sg.id} className="bg-white rounded-xl border shadow-sm overflow-hidden">
+                    <button
+                      onClick={() => setExpandedGuide(isOpen ? null : sg.id)}
+                      className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <FileText className="w-4 h-4 text-purple-500 shrink-0" />
+                        <div className="text-left min-w-0">
+                          <p className="font-medium text-gray-900 truncate">{sg.title}</p>
+                          <p className="text-xs text-gray-500">
+                            {sg.course.code} — {sg.course.title}
+                            {sg.chapter && ` · ${sg.chapter}`}
+                            {" · "}{formatDate(sg.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
                         {sg.completed ? (
-                          <span className="flex items-center gap-1 text-green-600 text-xs">
-                            <CheckCircle2 className="w-3 h-3" /> Terminé
+                          <span className="flex items-center gap-1 text-green-600 text-xs font-medium">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Terminé
                           </span>
                         ) : (
                           <span className="flex items-center gap-1 text-gray-400 text-xs">
-                            <Clock className="w-3 h-3" /> En cours
+                            <Clock className="w-3.5 h-3.5" /> En cours
                           </span>
                         )}
-                      </td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(sg.createdAt)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                      </div>
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-5 border-t border-gray-100">
+                        <div className="prose prose-sm max-w-none mt-4">
+                          <MathMarkdown>{sg.content}</MathMarkdown>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
         )}
 
         {/* Flashcards Tab */}
         {activeTab === "flashcards" && (
-          <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+          <div className="space-y-3">
             {user.flashcardDecks.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
+              <div className="bg-white rounded-xl border text-center py-12 text-gray-500">
                 <GraduationCap className="w-8 h-8 mx-auto mb-2 text-gray-300" />
                 <p>Aucun jeu de flashcards</p>
               </div>
             ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50 border-b">
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Titre</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Cours</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Révisé</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Confiance</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {user.flashcardDecks.map((fd) => (
-                    <tr key={fd.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium text-gray-900">{fd.title}</td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">{fd.course.code}</td>
-                      <td className="px-4 py-3">
+              user.flashcardDecks.map((fd) => {
+                const isOpen = expandedDeck === fd.id;
+                let cards: { front: string; back: string }[] = [];
+                if (isOpen) {
+                  try { cards = JSON.parse(fd.cards); } catch { cards = []; }
+                }
+                return (
+                  <div key={fd.id} className="bg-white rounded-xl border shadow-sm overflow-hidden">
+                    <button
+                      onClick={() => setExpandedDeck(isOpen ? null : fd.id)}
+                      className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <GraduationCap className="w-4 h-4 text-amber-500 shrink-0" />
+                        <div className="text-left min-w-0">
+                          <p className="font-medium text-gray-900 truncate">{fd.title}</p>
+                          <p className="text-xs text-gray-500">{fd.course.code} — {fd.course.title} · {formatDate(fd.createdAt)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
                         {fd.reviewed ? (
                           <CheckCircle2 className="w-4 h-4 text-green-500" />
                         ) : (
                           <XCircle className="w-4 h-4 text-gray-300" />
                         )}
-                      </td>
-                      <td className="px-4 py-3">
-                        {fd.confidence !== null ? (
-                          <span className="text-gray-900 font-medium">{fd.confidence}%</span>
-                        ) : (
-                          <span className="text-gray-400">—</span>
+                        {fd.confidence !== null && (
+                          <span className="text-xs font-medium text-gray-700">{fd.confidence}%</span>
                         )}
-                      </td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(fd.createdAt)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                      </div>
+                    </button>
+                    {isOpen && cards.length > 0 && (
+                      <div className="px-5 pb-5 border-t border-gray-100">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                          {cards.map((card, i) => (
+                            <div key={i} className="border border-gray-100 rounded-lg p-3">
+                              <div className="text-xs font-semibold text-blue-600 mb-1">Q{i + 1}</div>
+                              <div className="prose prose-sm max-w-none text-sm">
+                                <MathMarkdown>{card.front}</MathMarkdown>
+                              </div>
+                              <div className="border-t border-gray-100 mt-2 pt-2">
+                                <div className="text-xs font-semibold text-green-600 mb-1">Réponse</div>
+                                <div className="prose prose-sm max-w-none text-sm">
+                                  <MathMarkdown>{card.back}</MathMarkdown>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
         )}

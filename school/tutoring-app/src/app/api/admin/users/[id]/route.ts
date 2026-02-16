@@ -57,11 +57,13 @@ export async function GET(
           topic: true,
           difficulty: true,
           score: true,
+          questions: true,
+          solutions: true,
           createdAt: true,
           course: { select: { id: true, code: true, title: true } },
         },
         orderBy: { createdAt: "desc" },
-        take: 10,
+        take: 20,
       },
       studyGuides: {
         select: {
@@ -69,11 +71,12 @@ export async function GET(
           title: true,
           chapter: true,
           completed: true,
+          content: true,
           createdAt: true,
           course: { select: { id: true, code: true, title: true } },
         },
         orderBy: { createdAt: "desc" },
-        take: 10,
+        take: 20,
       },
       flashcardDecks: {
         select: {
@@ -81,11 +84,12 @@ export async function GET(
           title: true,
           reviewed: true,
           confidence: true,
+          cards: true,
           createdAt: true,
           course: { select: { id: true, code: true, title: true } },
         },
         orderBy: { createdAt: "desc" },
-        take: 10,
+        take: 20,
       },
       studyPlans: {
         select: {
