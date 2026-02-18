@@ -145,6 +145,18 @@ const translations = {
     fr: "Erreur lors de l'inscription",
     en: "Registration error",
   },
+  "register.error.terms": {
+    fr: "Vous devez accepter les conditions d'utilisation",
+    en: "You must accept the terms of service",
+  },
+  "register.acceptTerms": {
+    fr: "J'accepte les",
+    en: "I accept the",
+  },
+  "register.termsLink": {
+    fr: "conditions d'utilisation et la politique de confidentialité",
+    en: "terms of service and privacy policy",
+  },
 
   // ============= SIDEBAR =============
   "nav.dashboard": { fr: "Tableau de Bord", en: "Dashboard" },

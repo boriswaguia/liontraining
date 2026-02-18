@@ -61,6 +61,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -116,6 +117,11 @@ export default function RegisterPage() {
 
     if (password.length < 6) {
       setError(t("register.error.passwordShort", lang));
+      return;
+    }
+
+    if (!acceptedTerms) {
+      setError(t("register.error.terms", lang));
       return;
     }
 
@@ -455,9 +461,26 @@ export default function RegisterPage() {
                   />
                 </div>
 
+                {/* Terms acceptance */}
+                <div className="flex items-start gap-2.5">
+                  <input
+                    type="checkbox"
+                    id="accept-terms"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <label htmlFor="accept-terms" className="text-sm text-gray-600 leading-snug">
+                    {t("register.acceptTerms", lang)}{" "}
+                    <Link href="/terms" target="_blank" className="text-blue-600 hover:text-blue-700 underline">
+                      {t("register.termsLink", lang)}
+                    </Link>
+                  </label>
+                </div>
+
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !acceptedTerms}
                   className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? t("register.submitting", lang) : t("register.submit", lang)}
