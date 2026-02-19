@@ -176,6 +176,7 @@ const translations = {
   "nav.admin.activity": { fr: "Journal d'activité", en: "Activity Log" },
   "nav.admin.analytics": { fr: "Tableau de bord", en: "Analytics" },
   "nav.admin.settings": { fr: "Réglages IA", en: "AI Settings" },
+  "nav.admin.backup": { fr: "Sauvegarde BD", en: "DB Backup" },
   "nav.admin.creditPacks": { fr: "Packs Crédits", en: "Credit Packs" },
   "nav.credits": { fr: "Mes Crédits", en: "My Credits" },
   "admin.settings.title": {
@@ -865,5 +866,6 @@ export function getAdminNavigation(lang: Language) {
     { name: t("nav.admin.activity", lang), href: "/admin/activity" },
     { name: t("nav.admin.analytics", lang), href: "/admin/analytics" },
     { name: t("nav.admin.settings", lang), href: "/admin/settings" },
+    { name: t("nav.admin.backup", lang), href: "/admin/backup" },
   ];
 }

@@ -26,7 +26,7 @@ RUN npm run build
 
 # ── Stage 3: Production runtime ──
 FROM node:22-slim AS runner
-RUN apt-get update && apt-get install -y openssl --no-install-recommends && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y openssl postgresql-client --no-install-recommends && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
 ENV NODE_ENV=production

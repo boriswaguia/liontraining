@@ -45,6 +45,31 @@ services:
       db:
         condition: service_healthy
 
+  # ── Automated Daily Database Backups ──
+  # Stores compressed backups in the pgbackups Docker volume.
+  # Keeps: 7 daily, 4 weekly, 3 monthly.
+  # To trigger manually: docker compose exec backup /backup.sh
+  backup:
+    image: prodrigestivill/postgres-backup-local
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: ${POSTGRES_DB:-lionlearn}
+      POSTGRES_USER: ${POSTGRES_USER:-lionlearn}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      SCHEDULE: "@daily"
+      BACKUP_KEEP_DAYS: 7
+      BACKUP_KEEP_WEEKS: 4
+      BACKUP_KEEP_MONTHS: 3
+      POSTGRES_EXTRA_OPTS: "-Z6"
+    volumes:
+      - pgbackups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   pgdata:
+    driver: local
+  pgbackups:
     driver: local
