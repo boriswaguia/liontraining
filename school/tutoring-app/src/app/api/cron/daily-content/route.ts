@@ -10,8 +10,6 @@ import { sendEmail, buildRecommendationEmail } from "@/lib/email";
 import { logActivity, Actions } from "@/lib/activity";
 import { auth } from "@/lib/auth";
 
-const CRON_SECRET = process.env.CRON_SECRET || "";
-
 /**
  * POST /api/cron/daily-content
  *
@@ -22,8 +20,10 @@ const CRON_SECRET = process.env.CRON_SECRET || "";
  */
 export async function POST(req: NextRequest) {
   // ── Auth: check cron secret OR admin session ──
+  // Read at request time so auto-generated secrets (set in instrumentation.ts) are picked up
+  const cronSecret = process.env.CRON_SECRET || "";
   const secret = req.headers.get("x-cron-secret") || "";
-  const hasCronSecret = CRON_SECRET && secret === CRON_SECRET;
+  const hasCronSecret = cronSecret !== "" && secret === cronSecret;
 
   let isAdmin = false;
   if (!hasCronSecret) {
